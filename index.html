@@ -106,18 +106,14 @@
     <a-entity class="dishTarget" data-key="gapao" mindar-image-target="targetIndex: 0">
       <a-plane class="ruler" visible="false" rotation="0 0 0" position="0 0 0.004" material="src: ./assets/ruler.png; transparent: true; shader: flat; side: double"></a-plane>
       <a-entity class="yaw" rotation="0 0 0"><a-entity class="pitch" rotation="0 0 0">
-        <a-entity class="reveal" animation__reveal="property: scale; from: 0 0 0; to: 1 1 1; dur: 600; easing: easeOutBack; startEvents: doReveal">
-          <a-gltf-model class="model" src="#gapaoAsset" rotation="90 0 0" position="0 0 0.2" scale="1.2 1.2 1.2"></a-gltf-model>
-        </a-entity>
+        <a-gltf-model class="model" src="#gapaoAsset" rotation="90 0 0" position="0 0 0.2" scale="1.2 1.2 1.2"></a-gltf-model>
       </a-entity></a-entity>
     </a-entity>
 
     <a-entity class="dishTarget" data-key="kaomangai" mindar-image-target="targetIndex: 1">
       <a-plane class="ruler" visible="false" rotation="0 0 0" position="0 0 0.004" material="src: ./assets/ruler.png; transparent: true; shader: flat; side: double"></a-plane>
       <a-entity class="yaw" rotation="0 0 0"><a-entity class="pitch" rotation="0 0 0">
-        <a-entity class="reveal" animation__reveal="property: scale; from: 0 0 0; to: 1 1 1; dur: 600; easing: easeOutBack; startEvents: doReveal">
-          <a-gltf-model class="model" src="#kaomangaiAsset" rotation="90 0 0" position="0 0 0.2" scale="1.2 1.2 1.2"></a-gltf-model>
-        </a-entity>
+        <a-gltf-model class="model" src="#kaomangaiAsset" rotation="90 0 0" position="0 0 0.2" scale="1.2 1.2 1.2"></a-gltf-model>
       </a-entity></a-entity>
     </a-entity>
   </a-scene>
@@ -147,8 +143,7 @@
       dishes[key] = {
         key, target: t,
         ruler: t.querySelector('.ruler'), yaw: t.querySelector('.yaw'), pitch: t.querySelector('.pitch'),
-        reveal: t.querySelector('.reveal'), model: t.querySelector('.model'),
-        audio: Object.assign(new Audio(META[key].audio), { preload: 'auto' }),
+        model: t.querySelector('.model'),
         ...META[key]
       };
     });
@@ -204,8 +199,7 @@
       document.getElementById('tuneToggle').style.display = 'block';
       loader.style.display = 'flex';
       setTimeout(() => { loader.style.display = 'none'; }, 8000);
-      // 音声ロック解除（ユーザー操作中に一度だけ）
-      Object.values(dishes).forEach(d => { try { d.audio.muted = true; const p = d.audio.play(); if (p) p.then(() => { d.audio.pause(); d.audio.currentTime = 0; d.audio.muted = false; }).catch(() => { d.audio.muted = false; }); } catch (e) {} });
+      unlockAudio();   // ★ユーザー操作の瞬間にオーディオを解錠（以後は自動再生できる）
       try {
         if (!sceneEl.hasLoaded) await new Promise(r => sceneEl.addEventListener('loaded', r, { once: true }));
         await sceneEl.systems['mindar-image-system'].start();
@@ -223,7 +217,7 @@
         active = d; scanHint.style.opacity = '0';
         yaw = 0; pitch = 0; spinVel = 0;
         d.yaw.object3D.rotation.set(0, 0, 0); d.pitch.object3D.rotation.set(0, 0, 0);
-        seat(d); d.reveal.emit('doReveal');
+        seat(d);
         lineIdx = 0; showBubble(d.lines[0]); playAudio(d);
       });
       d.target.addEventListener('targetLost', () => {
@@ -231,9 +225,25 @@
       });
     });
 
-    // 音声
-    function playAudio(d) { if (!soundOn) return; stopAudio(); try { d.audio.currentTime = 0; d.audio.play().catch(() => {}); } catch (e) {} }
-    function stopAudio() { Object.values(dishes).forEach(d => { try { d.audio.pause(); } catch (e) {} }); }
+    // 音声（Web Audio API：iOS等でも確実に鳴らすため）
+    let actx = null; const buffers = {}; let curSource = null;
+    async function initAudio() {
+      try {
+        actx = new (window.AudioContext || window.webkitAudioContext)();
+        await Promise.all(Object.values(dishes).map(async d => {
+          try { const ab = await (await fetch(d.audio)).arrayBuffer(); buffers[d.key] = await actx.decodeAudioData(ab); } catch (e) {}
+        }));
+      } catch (e) { actx = null; }
+    }
+    function unlockAudio() { if (actx && actx.state === 'suspended') actx.resume(); }
+    function playAudio(d) {
+      if (!soundOn || !actx || !buffers[d.key]) return;
+      if (actx.state === 'suspended') actx.resume();
+      stopAudio();
+      try { const s = actx.createBufferSource(); s.buffer = buffers[d.key]; s.connect(actx.destination); s.start(0); curSource = s; } catch (e) {}
+    }
+    function stopAudio() { if (curSource) { try { curSource.stop(); } catch (e) {} curSource = null; } }
+    initAudio();
 
     // ボタン
     document.getElementById('spinBtn').addEventListener('click', (e) => { autoSpin = !autoSpin; e.target.textContent = (autoSpin ? '⏸' : '▶') + ' 回転'; });
