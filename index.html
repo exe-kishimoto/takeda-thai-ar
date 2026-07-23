@@ -27,12 +27,10 @@
     #bubble { position: fixed; left: 50%; top: 54px; transform: translateX(-50%) scale(.9); z-index: 22; max-width: 86%; background: #fff; color: #2a2118; padding: 12px 16px; border-radius: 16px; font-size: 15px; line-height: 1.6; box-shadow: 0 8px 24px rgba(0,0,0,.35); opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; }
     #bubble.show { opacity: 1; transform: translateX(-50%) scale(1); }
     #bubble::after { content: ""; position: absolute; left: 50%; bottom: -10px; transform: translateX(-50%); border: 10px solid transparent; border-top-color: #fff; border-bottom: 0; }
-    #hintOps { position: fixed; left: 0; right: 0; bottom: 82px; z-index: 19; text-align: center; color: #fff; font-size: 12px; opacity: 0; pointer-events: none; text-shadow: 0 1px 4px rgba(0,0,0,.85); transition: opacity .4s; }
+    #hintOps { position: fixed; left: 0; right: 0; bottom: 104px; z-index: 19; text-align: center; color: #fff; font-size: 12px; opacity: 0; pointer-events: none; text-shadow: 0 1px 4px rgba(0,0,0,.85); transition: opacity .4s; }
     #hintOps.show { opacity: .9; }
-    #bar { position: fixed; left: 0; right: 0; bottom: 18px; z-index: 20; display: none; justify-content: flex-start; gap: 7px; padding: 0 10px; overflow-x: auto; white-space: nowrap; }
-    #bar::-webkit-scrollbar { display: none; }
-    #bar .wrap { margin: 0 auto; display: inline-flex; gap: 7px; }
-    #bar button { flex: 0 0 auto; border: 0; border-radius: 999px; padding: 9px 13px; background: rgba(0,0,0,.6); color: #fff; font-size: 13px; cursor: pointer; }
+    #bar { position: fixed; left: 0; right: 0; bottom: 14px; z-index: 20; display: none; justify-content: center; flex-wrap: wrap; gap: 6px; padding: 0 8px; }
+    #bar button { border: 0; border-radius: 999px; padding: 8px 12px; background: rgba(0,0,0,.62); color: #fff; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
     #bar button.on { background: #e0703a; }
     .ui { touch-action: none; }
     #tuneToggle { position: fixed; right: 12px; top: 12px; z-index: 21; width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(0,0,0,.5); color: #fff; font-size: 20px; cursor: pointer; display: none; }
@@ -58,14 +56,14 @@
   <div id="bubble"></div>
   <div id="hintOps">ドラッグ＝回転　ピンチ＝拡大　タップ＝説明</div>
 
-  <div id="bar"><span class="wrap">
+  <div id="bar">
     <button id="spinBtn" class="ui">▶ 回転</button>
     <button id="talkBtn" class="ui">💬 説明</button>
     <button id="rulerBtn" class="ui">📏 定規</button>
     <button id="refBtn" class="ui">💳 カード</button>
     <button id="soundBtn" class="ui">🔊 音声</button>
-    <button id="resetBtn" class="ui">↺</button>
-  </span></div>
+    <button id="resetBtn" class="ui">↺ リセット</button>
+  </div>
 
   <button id="tuneToggle" class="ui">⚙️</button>
   <div id="tune" class="ui">
