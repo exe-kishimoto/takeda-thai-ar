@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>タイ料理メニュー AR（実物大）</title>
+
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; font-family: system-ui, sans-serif; }
+
+    #intro {
+      position: fixed; inset: 0; z-index: 30;
+      background: linear-gradient(160deg, #14243f, #7a1e1e);
+      color: #fff; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; text-align: center; padding: 24px;
+    }
+    #intro h1 { font-size: 21px; margin-bottom: 8px; font-weight: 700; }
+    #intro p { font-size: 15px; opacity: .92; line-height: 1.8; margin-bottom: 26px; }
+    #startBtn {
+      font-size: 17px; padding: 14px 36px; border: 0; border-radius: 999px;
+      background: #e0703a; color: #fff; font-weight: 700; cursor: pointer;
+      box-shadow: 0 6px 20px rgba(224,112,58,.4);
+    }
+    #startBtn:active { transform: scale(.97); }
+
+    #scanHint {
+      position: fixed; left: 0; right: 0; bottom: 150px; z-index: 20;
+      text-align: center; color: #fff; font-size: 15px; pointer-events: none;
+      text-shadow: 0 2px 8px rgba(0,0,0,.8); transition: opacity .4s;
+    }
+    #scanHint .box { display: inline-block; background: rgba(0,0,0,.55); padding: 10px 20px; border-radius: 999px; }
+    #loader { position: fixed; inset: 0; z-index: 25; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.6); color: #fff; font-size: 15px; }
+
+    #bubble {
+      position: fixed; left: 50%; top: 56px; transform: translateX(-50%) scale(.9);
+      z-index: 22; max-width: 84%; background: #fff; color: #2a2118;
+      padding: 12px 16px; border-radius: 16px; font-size: 15px; line-height: 1.6;
+      box-shadow: 0 8px 24px rgba(0,0,0,.35); opacity: 0; pointer-events: none;
+      transition: opacity .25s, transform .25s;
+    }
+    #bubble.show { opacity: 1; transform: translateX(-50%) scale(1); }
+    #bubble::after { content: ""; position: absolute; left: 50%; bottom: -10px; transform: translateX(-50%); border: 10px solid transparent; border-top-color: #fff; border-bottom: 0; }
+
+    /* 料理切替タブ */
+    #dishes {
+      position: fixed; left: 0; right: 0; bottom: 108px; z-index: 20; display: none;
+      justify-content: center; gap: 8px; flex-wrap: wrap; padding: 0 8px;
+    }
+    #dishes button {
+      border: 0; border-radius: 999px; padding: 9px 16px; font-size: 14px; cursor: pointer;
+      background: rgba(255,255,255,.85); color: #14243f; font-weight: 700;
+    }
+    #dishes button.active { background: #e0703a; color: #fff; }
+
+    #bar { position: fixed; left: 0; right: 0; bottom: 16px; z-index: 20; display: none; justify-content: center; gap: 8px; flex-wrap: wrap; padding: 0 8px; pointer-events: none; }
+    #bar button { pointer-events: auto; border: 0; border-radius: 999px; padding: 9px 14px; background: rgba(0,0,0,.55); color: #fff; font-size: 13px; cursor: pointer; }
+    #hintOps { position: fixed; left: 0; right: 0; bottom: 66px; z-index: 20; text-align: center; color: #fff; font-size: 12px; opacity: .85; pointer-events: none; text-shadow: 0 1px 4px rgba(0,0,0,.8); }
+
+    .ui { touch-action: none; }
+    #tuneToggle { position: fixed; right: 12px; top: 12px; z-index: 21; width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(0,0,0,.5); color: #fff; font-size: 20px; cursor: pointer; display: none; }
+    #tune { position: fixed; right: 12px; top: 66px; z-index: 21; display: none; background: rgba(0,0,0,.78); color: #fff; padding: 14px; border-radius: 12px; font-size: 12px; width: 226px; max-height: 80vh; overflow:auto; }
+    #tune label { display: block; margin: 8px 0 2px; }
+    #tune input[type=range] { width: 100%; }
+    #tune input[type=number] { width: 64px; }
+    #tune .val { float: right; opacity: .8; }
+    #tune code { font-size: 11px; color: #ffd; word-break: break-all; }
+    #tune hr { border: 0; border-top: 1px solid rgba(255,255,255,.2); margin: 12px 0; }
+    #calcBtn { margin-top: 8px; width: 100%; padding: 8px; border: 0; border-radius: 8px; background: #e0703a; color: #fff; font-weight: 700; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="intro">
+    <h1>🍽 タイ料理メニュー AR</h1>
+    <p>「はじめる」でカメラを許可し、<br><b>メニュー表全体</b>にカメラを向けてください。<br>実物大の料理が3Dで登場して、説明してくれます。</p>
+    <button id="startBtn">▶ はじめる</button>
+  </div>
+
+  <div id="scanHint" style="display:none"><span class="box">📋 メニュー表にカメラを向けてください</span></div>
+  <div id="loader">3Dモデルを読み込み中…</div>
+  <div id="bubble"></div>
+
+  <div id="dishes"></div>
+  <div id="hintOps" style="display:none">ドラッグ＝回転　ピンチ＝拡大　タップ＝説明　⚙️で実寸合わせ</div>
+  <div id="bar">
+    <button id="spinBtn" class="ui">⏸ 自動回転</button>
+    <button id="talkBtn" class="ui">💬 説明</button>
+    <button id="soundBtn" class="ui">🔊 音声</button>
+    <button id="resetBtn" class="ui">↺ リセット</button>
+  </div>
+
+  <button id="tuneToggle" class="ui">⚙️</button>
+  <div id="tune" class="ui">
+    <strong>実寸合わせ（キャリブレーション）</strong>
+    <label>メニュー表の印刷横幅 <input type="number" id="cMenu" value="42" step="1"> cm</label>
+    <label>料理（皿）の実寸横幅 <input type="number" id="cDish" value="26" step="1"> cm</label>
+    <button id="calcBtn">この実寸に合わせる</button>
+    <hr>
+    <strong>微調整</strong>
+    <label>大きさ <span class="val" id="vScale">0.30</span></label>
+    <input type="range" id="sScale" min="0.05" max="1.0" step="0.005" value="0.30">
+    <label>高さ（浮き）<span class="val" id="vY">0.00</span></label>
+    <input type="range" id="sY" min="-0.3" max="0.5" step="0.01" value="0.00">
+    <label>傾き（X回転）<span class="val" id="vTilt">90</span></label>
+    <input type="range" id="sTilt" min="0" max="180" step="1" value="90">
+    <div style="margin-top:10px">現在値:<br><code id="dump"></code></div>
+  </div>
+
+  <a-scene
+    mindar-image="imageTargetSrc: ./assets/targets.mind; autoStart: false; uiScanning: no; uiLoading: no; uiError: no; filterMinCF: 0.0001; filterBeta: 30; missTolerance: 5; warmupTolerance: 5;"
+    color-space="sRGB"
+    renderer="colorManagement: true, physicallyCorrectLights: true, antialias: true"
+    gltf-model="dracoDecoderPath: https://www.gstatic.com/draco/versioned/decoders/1.5.6/"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false">
+
+    <a-assets>
+      <a-asset-item id="gapao" src="./assets/gapao.glb"></a-asset-item>
+      <a-asset-item id="kaomangai" src="./assets/kaomangai.glb"></a-asset-item>
+    </a-assets>
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <a-entity id="target" mindar-image-target="targetIndex: 0">
+      <a-entity id="yaw" rotation="0 0 0">
+        <a-entity id="pitch" rotation="0 0 0">
+          <a-entity id="reveal"
+            animation__reveal="property: scale; from: 0 0 0; to: 1 1 1; dur: 650; easing: easeOutBack; startEvents: doReveal">
+            <a-gltf-model id="model" rotation="90 0 0" position="0 0 0.1" scale="0.30 0.30 0.30"></a-gltf-model>
+          </a-entity>
+        </a-entity>
+      </a-entity>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    // ===== 料理データ =====
+    const NATIVE_W = 1.898;  // モデルの元の横幅(単位)
+    const DISHES = {
+      gapao: {
+        asset: '#gapao', label: '601 ガパオ', halfH: 0.332, scale: 0.30,
+        lines: [
+          'ガイパットガパオライスだよ！鶏ひき肉をホーリーバジルで炒めた、タイの大人気ごはん。',
+          '目玉焼きをくずして、ピリ辛のガパオとごはんを一緒に。箸が止まらないよ！',
+          'ライス付き ¥1,210（税込）。この大きさで一皿。実物大、伝わるかな？'
+        ]
+      },
+      kaomangai: {
+        asset: '#kaomangai', label: '605 カオマンガイ', halfH: 0.210, scale: 0.30,
+        lines: [
+          'カオマンガイ！鶏の旨みで炊いたごはんに、しっとり蒸し鶏をのせたタイのチキンライス。',
+          '甘辛の特製ダレをかけて食べてね。やさしい味で万人ウケするよ。',
+          'ライス付き ¥1,298（税込）。ボリュームもこの通り！'
+        ]
+      }
+    };
+
+    const sceneEl = document.querySelector('a-scene');
+    const intro   = document.getElementById('intro');
+    const scanHint= document.getElementById('scanHint');
+    const loader  = document.getElementById('loader');
+    const model   = document.getElementById('model');
+    const yawEl   = document.getElementById('yaw');
+    const pitchEl = document.getElementById('pitch');
+    const revealEl= document.getElementById('reveal');
+    const target  = document.getElementById('target');
+    const bubble  = document.getElementById('bubble');
+
+    // 現在の料理
+    let curKey = new URLSearchParams(location.search).get('dish');
+    if (!DISHES[curKey]) curKey = 'gapao';
+    const st = { scale: DISHES[curKey].scale, userY: 0.0, tilt: 90 };
+
+    // 料理タブ生成
+    const dishesEl = document.getElementById('dishes');
+    Object.entries(DISHES).forEach(([key, d]) => {
+      const b = document.createElement('button');
+      b.textContent = d.label; b.dataset.key = key;
+      b.addEventListener('click', () => selectDish(key));
+      dishesEl.appendChild(b);
+    });
+
+    function seat() {
+      const d = DISHES[curKey];
+      const baseSeat = d.halfH * st.scale;
+      model.setAttribute('scale', `${st.scale} ${st.scale} ${st.scale}`);
+      model.setAttribute('rotation', `${st.tilt} 0 0`);
+      model.setAttribute('position', `0 0 ${(baseSeat + st.userY).toFixed(3)}`);
+      document.getElementById('vScale').textContent = st.scale.toFixed(3);
+      document.getElementById('vY').textContent = st.userY.toFixed(2);
+      document.getElementById('vTilt').textContent = st.tilt;
+      document.getElementById('dump').textContent =
+        `${curKey}: scale ${st.scale.toFixed(3)} / z ${(baseSeat + st.userY).toFixed(3)}`;
+    }
+
+    function selectDish(key, {talkNow=true} = {}) {
+      curKey = key;
+      st.scale = DISHES[key].scale;   // 既定スケール（実寸合わせで上書き可）
+      document.getElementById('sScale').value = st.scale;
+      // タブのハイライト
+      [...dishesEl.children].forEach(b => b.classList.toggle('active', b.dataset.key === key));
+      // モデル差し替え
+      loader.style.display = 'flex';
+      model.setAttribute('gltf-model', DISHES[key].asset);
+      lineIdx = 0;
+      // model-loaded で seat + reveal + talk
+      model.addEventListener('model-loaded', function once() {
+        model.removeEventListener('model-loaded', once);
+        loader.style.display = 'none';
+        seat();
+        if (targetVisible) { revealEl.emit('doReveal'); if (talkNow) talk(0); }
+      });
+    }
+
+    // ===== 開始 =====
+    document.getElementById('startBtn').addEventListener('click', async () => {
+      intro.style.display = 'none';
+      document.getElementById('tuneToggle').style.display = 'block';
+      try {
+        if (!sceneEl.hasLoaded) await new Promise(r => sceneEl.addEventListener('loaded', r, { once: true }));
+        await sceneEl.systems['mindar-image-system'].start();
+        scanHint.style.display = 'block';
+        dishesEl.style.display = 'flex';
+        document.getElementById('bar').style.display = 'flex';
+        document.getElementById('hintOps').style.display = 'block';
+        startSpinLoop();
+        selectDish(curKey, {talkNow:false});   // 初期料理をロード
+      } catch (e) {
+        alert('カメラを開始できませんでした: ' + e.message + '\nhttps でアクセスしていますか？');
+      }
+    });
+
+    let targetVisible = false;
+    target.addEventListener('targetFound', () => {
+      targetVisible = true; scanHint.style.opacity = '0';
+      revealEl.emit('doReveal'); talk(0);
+    });
+    target.addEventListener('targetLost', () => {
+      targetVisible = false; scanHint.style.opacity = '1'; hideBubble();
+    });
+
+    // ===== 回転 =====
+    let yaw = 0, pitch = 0, spinVel = 0, autoSpin = true, dragging = false;
+    const AUTO_SPEED = 0.35;
+    function startSpinLoop() {
+      (function tick() {
+        if (!dragging) {
+          if (autoSpin) yaw += AUTO_SPEED;
+          yaw += spinVel; spinVel *= 0.94; if (Math.abs(spinVel) < 0.01) spinVel = 0;
+          yawEl.setAttribute('rotation', `0 0 ${yaw}`);
+        }
+        requestAnimationFrame(tick);
+      })();
+    }
+
+    document.getElementById('spinBtn').addEventListener('click', (e) => {
+      autoSpin = !autoSpin; e.target.textContent = (autoSpin ? '⏸' : '▶') + ' 自動回転';
+    });
+    document.getElementById('talkBtn').addEventListener('click', () => talk());
+    let soundOn = true;
+    document.getElementById('soundBtn').addEventListener('click', (e) => {
+      soundOn = !soundOn; e.target.textContent = (soundOn ? '🔊' : '🔇') + ' 音声';
+      if (!soundOn && window.speechSynthesis) speechSynthesis.cancel();
+    });
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      yaw = 0; pitch = 0; spinVel = 0; st.userY = 0; st.tilt = 90; st.scale = DISHES[curKey].scale;
+      document.getElementById('sScale').value = st.scale;
+      document.getElementById('sY').value = 0; document.getElementById('sTilt').value = 90;
+      yawEl.setAttribute('rotation', '0 0 0'); pitchEl.setAttribute('rotation', '0 0 0'); seat();
+    });
+
+    // ===== しゃべる =====
+    let lineIdx = 0, bubbleTimer = null;
+    function talk(forceIdx) {
+      const lines = DISHES[curKey].lines;
+      const text = (typeof forceIdx === 'number') ? lines[forceIdx] : lines[lineIdx % lines.length];
+      if (typeof forceIdx !== 'number') lineIdx++;
+      showBubble(text);
+      if (soundOn && window.speechSynthesis) {
+        try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text);
+          u.lang = 'ja-JP'; u.rate = 1.0; u.pitch = 1.1; speechSynthesis.speak(u); } catch (e) {}
+      }
+    }
+    function showBubble(t) { bubble.textContent = t; bubble.classList.add('show'); clearTimeout(bubbleTimer); bubbleTimer = setTimeout(hideBubble, 6500); }
+    function hideBubble() { bubble.classList.remove('show'); }
+
+    // ===== タッチ操作 =====
+    const pointers = new Map();
+    let pinchStartDist = 0, pinchStartScale = 0.3, lastX = 0, lastY = 0, lastMoveDx = 0;
+    let downTime = 0, moved = 0;
+    const isUI = (t) => t && t.closest && t.closest('.ui');
+
+    window.addEventListener('pointerdown', (e) => {
+      if (isUI(e.target)) return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size === 1) { dragging = true; lastX = e.clientX; lastY = e.clientY; lastMoveDx = 0; downTime = Date.now(); moved = 0; }
+      else if (pointers.size === 2) { const p = [...pointers.values()]; pinchStartDist = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y); pinchStartScale = st.scale; }
+    });
+    window.addEventListener('pointermove', (e) => {
+      if (!pointers.has(e.pointerId)) return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size === 1 && dragging) {
+        const dx = e.clientX - lastX, dy = e.clientY - lastY; lastX = e.clientX; lastY = e.clientY; lastMoveDx = dx; moved += Math.abs(dx) + Math.abs(dy);
+        yaw += dx * 0.4; pitch = Math.max(-100, Math.min(100, pitch + dy * 0.4));
+        yawEl.setAttribute('rotation', `0 0 ${yaw}`); pitchEl.setAttribute('rotation', `${pitch} 0 0`);
+      } else if (pointers.size === 2) {
+        const p = [...pointers.values()]; const dist = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
+        if (pinchStartDist > 0) { st.scale = Math.min(1.0, Math.max(0.05, pinchStartScale * (dist / pinchStartDist))); document.getElementById('sScale').value = st.scale; seat(); }
+      }
+    });
+    function endPointer(e) {
+      if (!pointers.has(e.pointerId)) return; pointers.delete(e.pointerId);
+      if (pointers.size < 2) pinchStartDist = 0;
+      if (pointers.size === 0) { dragging = false; spinVel = lastMoveDx * 0.4;
+        if (moved < 12 && (Date.now() - downTime) < 350 && targetVisible) talk();
+      } else if (pointers.size === 1) { const p = [...pointers.values()][0]; lastX = p.x; lastY = p.y; }
+    }
+    window.addEventListener('pointerup', endPointer);
+    window.addEventListener('pointercancel', endPointer);
+
+    // ===== 微調整・実寸合わせ =====
+    const tune = document.getElementById('tune');
+    document.getElementById('tuneToggle').addEventListener('click', () => { tune.style.display = tune.style.display === 'block' ? 'none' : 'block'; });
+    document.getElementById('sScale').oninput = e => { st.scale = +e.target.value; seat(); };
+    document.getElementById('sY').oninput     = e => { st.userY = +e.target.value; seat(); };
+    document.getElementById('sTilt').oninput  = e => { st.tilt  = +e.target.value; seat(); };
+    document.getElementById('calcBtn').addEventListener('click', () => {
+      const menuCm = +document.getElementById('cMenu').value;
+      const dishCm = +document.getElementById('cDish').value;
+      if (menuCm > 0 && dishCm > 0) {
+        // 実世界の料理幅 = scale * NATIVE_W * (メニュー印刷幅)
+        st.scale = (dishCm) / (NATIVE_W * menuCm);
+        document.getElementById('sScale').value = st.scale; seat();
+      }
+    });
+
+    seat();
+  </script>
+</body>
+</html>
