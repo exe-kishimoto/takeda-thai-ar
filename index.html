@@ -196,6 +196,7 @@
         const k = S.smoothTau <= 0 ? 1 : (1 - Math.exp(-dt / S.smoothTau));
         d.content.object3D.position.lerp(_p, k);
         d.content.object3D.quaternion.slerp(_q, k);
+        d.content.object3D.scale.lerp(_s, k);   // ★MindARのpostMatrixスケール(1単位=マーカー実寸)を保持
       }
     });
     function snapToTracker(d) {
@@ -203,6 +204,7 @@
       d.tracker.object3D.matrixWorld.decompose(_p, _q, _s);
       d.content.object3D.position.copy(_p);
       d.content.object3D.quaternion.copy(_q);
+      d.content.object3D.scale.copy(_s);         // ★スケールも合わせる
     }
 
     // ===== 読み込み =====
