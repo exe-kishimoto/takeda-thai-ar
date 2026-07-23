@@ -53,7 +53,7 @@
   <div id="scanHint" style="display:none"><span class="box">📸 料理の写真にカメラを向けてください</span></div>
   <div id="loader">3Dモデルを読み込み中…</div>
   <div id="bubble"></div>
-  <div id="hintOps">ドラッグ＝回転　ピンチ＝拡大　タップ＝説明</div>
+  <div id="hintOps">左右ドラッグ＝回す　ピンチ＝拡大　タップ＝説明　↺で正面</div>
 
   <div id="bar"><span class="wrap">
     <button id="spinBtn" class="ui">⏸ 回転</button>
@@ -61,7 +61,7 @@
     <button id="rulerBtn" class="ui">📏 定規</button>
     <button id="refBtn" class="ui">💳 カード</button>
     <button id="soundBtn" class="ui">🔊 音声</button>
-    <button id="resetBtn" class="ui">↺</button>
+    <button id="resetBtn" class="ui">↺ 正面</button>
   </span></div>
 
   <button id="tuneToggle" class="ui">⚙️</button>
@@ -274,7 +274,8 @@
     document.getElementById('soundBtn').addEventListener('click', (e) => { soundOn = !soundOn; e.target.textContent = (soundOn ? '🔊' : '🔇') + ' 音声'; if (!soundOn) stopAudio(); });
     document.getElementById('rulerBtn').addEventListener('click', (e) => { showRuler = !showRuler; e.target.classList.toggle('on', showRuler); Object.values(dishes).forEach(updateRuler); });
     document.getElementById('refBtn').addEventListener('click', (e) => { showRefs = !showRefs; e.target.classList.toggle('on', showRefs); Object.values(dishes).forEach(updateRefs); });
-    document.getElementById('resetBtn').addEventListener('click', () => { S.yaw = 0; S.pitch = 0; S.spinVel = 0; st.userY = 0; st.tilt = 90; document.getElementById('sY').value = 0; document.getElementById('sTilt').value = 90; applyAll(); });
+    // ↺ 正面：向きを正面に戻す（大きさ・実寸設定はそのまま）
+    document.getElementById('resetBtn').addEventListener('click', () => { S.yaw = 0; S.pitch = 0; S.spinVel = 0; });
 
     // 吹き出し
     let bubbleTimer = null;
@@ -298,7 +299,7 @@
         const dx = e.clientX - lastX, dy = e.clientY - lastY; lastX = e.clientX; lastY = e.clientY; lastMoveDx = dx; moved += Math.abs(dx) + Math.abs(dy);
         // 指で回し始めたら自動回転を止める（操作が取り合いにならないように）
         if (S.autoSpin && moved > 8) { S.autoSpin = false; document.getElementById('spinBtn').textContent = '▶ 回転'; }
-        S.yaw += dx * 0.4; S.pitch = Math.max(-100, Math.min(100, S.pitch + dy * 0.4));
+        S.yaw += dx * 0.5;   // 横回転（ターンテーブル）のみ。縦の傾きは無効化して「斜め迷子」を防止
       } else if (pointers.size === 2) {
         const p = [...pointers.values()]; const dist = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
         if (pinchStartDist > 0) { st.scale = Math.min(3.0, Math.max(0.05, pinchStartScale * (dist / pinchStartDist))); document.getElementById('sScale').value = st.scale; applyAll(); }
