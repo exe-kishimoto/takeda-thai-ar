@@ -59,7 +59,7 @@
     <button id="spinBtn" class="ui">⏸ 回転</button>
     <button id="talkBtn" class="ui">💬 説明</button>
     <button id="rulerBtn" class="ui">📏 定規</button>
-    <button id="refBtn" class="ui">🥤 比較</button>
+    <button id="refBtn" class="ui">💳 カード</button>
     <button id="soundBtn" class="ui">🔊 音声</button>
     <button id="resetBtn" class="ui">↺</button>
   </span></div>
@@ -174,13 +174,6 @@
       const card = document.createElement('a-plane');
       card.setAttribute('material', 'src: ./assets/refcard.png; transparent: true; shader: flat; side: double');
       card.setAttribute('visible', 'false'); d.content.appendChild(card); d.card = card;
-      const bottle = document.createElement('a-entity');
-      bottle.setAttribute('visible', 'false'); bottle.setAttribute('rotation', '90 0 0');
-      const body = document.createElement('a-cylinder'); body.setAttribute('material', 'color: #d7ecf7; opacity: 0.85; transparent: true; shader: flat');
-      const label = document.createElement('a-cylinder'); label.setAttribute('material', 'color: #e0703a; shader: flat');
-      const cap = document.createElement('a-cylinder'); cap.setAttribute('material', 'color: #2a7fbf; shader: flat');
-      bottle.appendChild(body); bottle.appendChild(label); bottle.appendChild(cap);
-      d.content.appendChild(bottle); d.bottle = { group: bottle, body, label, cap };
     }
     function updateRefs(d) {
       if (!d.card) return;
@@ -190,15 +183,6 @@
       d.card.setAttribute('geometry', `primitive: plane; width: ${cw.toFixed(3)}; height: ${ch.toFixed(3)}`);
       d.card.setAttribute('position', `${(-(dishHalf + cw * 0.5 + 0.1)).toFixed(3)} 0 0.004`);
       d.card.setAttribute('visible', showRefs);
-      const bodyR = 3.3 * u, bodyH = 16 * u, capR = 1.7 * u, capH = 2.4 * u;
-      d.bottle.body.setAttribute('geometry', `primitive: cylinder; radius: ${bodyR.toFixed(3)}; height: ${bodyH.toFixed(3)}`);
-      d.bottle.body.setAttribute('position', `0 ${(bodyH * 0.5).toFixed(3)} 0`);
-      d.bottle.label.setAttribute('geometry', `primitive: cylinder; radius: ${(bodyR * 1.03).toFixed(3)}; height: ${(5 * u).toFixed(3)}`);
-      d.bottle.label.setAttribute('position', `0 ${(bodyH * 0.45).toFixed(3)} 0`);
-      d.bottle.cap.setAttribute('geometry', `primitive: cylinder; radius: ${capR.toFixed(3)}; height: ${capH.toFixed(3)}`);
-      d.bottle.cap.setAttribute('position', `0 ${(bodyH + capH * 0.5).toFixed(3)} 0`);
-      d.bottle.group.setAttribute('position', `${(dishHalf + bodyR + 0.15).toFixed(3)} 0 0`);
-      d.bottle.group.setAttribute('visible', showRefs);
     }
     function refreshPanel() {
       document.getElementById('vScale').textContent = st.scale.toFixed(2);
@@ -208,30 +192,39 @@
     }
     function applyAll() { Object.values(dishes).forEach(seat); refreshPanel(); }
 
-    // ★平滑追従（フレームレート非依存・ガード付き）
+    // ★平滑追従（毎フレーム、トラッカーの実表示状態で判定＝フリーズ/残留を防ぐ）
     const _p = new THREE.Vector3(), _q = new THREE.Quaternion(), _s = new THREE.Vector3();
     AFRAME.registerComponent('smoother', {
       tick: function (time, dt) {
-        const d = S.active; if (!d) return;
         dt = Math.min(dt || 16.7, 60);
-        // 自動回転＋フリック慣性
-        const f = dt / 16.67;
-        if (!S.dragging) { if (S.autoSpin) S.yaw += 0.35 * f; S.yaw += S.spinVel * f; S.spinVel *= Math.pow(0.94, f); if (Math.abs(S.spinVel) < 0.01) S.spinVel = 0; }
-        d.yaw.object3D.rotation.z = THREE.MathUtils.degToRad(S.yaw);
-        d.pitch.object3D.rotation.x = THREE.MathUtils.degToRad(S.pitch);
-        // トラッカー姿勢を取得
-        const o = d.tracker.object3D; o.updateWorldMatrix(true, false);
-        o.matrixWorld.decompose(_p, _q, _s);
-        // ガード：無効行列（未検出=ゼロ行列やNaN）はスキップ
-        if (!(_s.x > 1e-6) || !isFinite(_p.x) || !isFinite(_q.x)) return;
-        if (!d._init) {   // 最初の有効フレームでスナップ＆表示
-          d.content.object3D.position.copy(_p); d.content.object3D.quaternion.copy(_q); d.content.object3D.scale.copy(_s);
-          d.content.setAttribute('visible', true); d._init = true; return;
-        }
         const k = 1 - Math.exp(-dt / S.smoothTau);
-        d.content.object3D.position.lerp(_p, k);
-        d.content.object3D.quaternion.slerp(_q, k);
-        d.content.object3D.scale.lerp(_s, k);
+        let found = null;
+        for (const key in dishes) {
+          const d = dishes[key];
+          const o = d.tracker.object3D; o.updateWorldMatrix(true, false);
+          o.matrixWorld.decompose(_p, _q, _s);
+          const valid = o.visible && _s.x > 1e-6 && isFinite(_p.x) && isFinite(_q.x) && isFinite(_s.x);
+          if (valid) {
+            found = d;
+            if (!d._init) { d.content.object3D.position.copy(_p); d.content.object3D.quaternion.copy(_q); d.content.object3D.scale.copy(_s); d.content.setAttribute('visible', true); d._init = true; }
+            else { d.content.object3D.position.lerp(_p, k); d.content.object3D.quaternion.slerp(_q, k); d.content.object3D.scale.lerp(_s, k); }
+          } else if (d._init) {
+            d._init = false; d.content.setAttribute('visible', false);
+          }
+        }
+        // アクティブ料理の切替
+        if (found !== S.active) {
+          S.active = found;
+          if (found) { S.yaw = 0; S.pitch = 0; S.spinVel = 0; seat(found); lineIdx = 0; showBubble(found.lines[0]); playAudio(found); scanHint.style.opacity = '0'; }
+          else { scanHint.style.opacity = '1'; hideBubble(); stopAudio(); }
+        }
+        // 回転（自動＋フリック慣性）
+        if (S.active) {
+          const f = dt / 16.67;
+          if (!S.dragging) { if (S.autoSpin) S.yaw += 0.35 * f; S.yaw += S.spinVel * f; S.spinVel *= Math.pow(0.94, f); if (Math.abs(S.spinVel) < 0.01) S.spinVel = 0; }
+          S.active.yaw.object3D.rotation.z = THREE.MathUtils.degToRad(S.yaw);
+          S.active.pitch.object3D.rotation.x = THREE.MathUtils.degToRad(S.pitch);
+        }
       }
     });
 
@@ -258,18 +251,6 @@
         applyAll(); applyJitter();
         if (Object.values(dishes).every(d => d.model.getObject3D('mesh'))) loader.style.display = 'none';
       } catch (e) { loader.style.display = 'none'; alert('カメラを開始できませんでした: ' + e.message); }
-    });
-
-    // 検出（見た目・音声。位置追従はsmootherが担当）
-    Object.values(dishes).forEach(d => {
-      d.tracker.addEventListener('targetFound', () => {
-        S.active = d; d._init = false; scanHint.style.opacity = '0';
-        S.yaw = 0; S.pitch = 0; S.spinVel = 0;
-        seat(d); lineIdx = 0; showBubble(d.lines[0]); playAudio(d);
-      });
-      d.tracker.addEventListener('targetLost', () => {
-        if (S.active === d) { S.active = null; d._init = false; d.content.setAttribute('visible', false); scanHint.style.opacity = '1'; hideBubble(); stopAudio(); }
-      });
     });
 
     // 音声（Web Audio）
@@ -315,6 +296,8 @@
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (pointers.size === 1 && S.dragging && S.active) {
         const dx = e.clientX - lastX, dy = e.clientY - lastY; lastX = e.clientX; lastY = e.clientY; lastMoveDx = dx; moved += Math.abs(dx) + Math.abs(dy);
+        // 指で回し始めたら自動回転を止める（操作が取り合いにならないように）
+        if (S.autoSpin && moved > 8) { S.autoSpin = false; document.getElementById('spinBtn').textContent = '▶ 回転'; }
         S.yaw += dx * 0.4; S.pitch = Math.max(-100, Math.min(100, S.pitch + dy * 0.4));
       } else if (pointers.size === 2) {
         const p = [...pointers.values()]; const dist = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
