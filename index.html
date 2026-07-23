@@ -65,6 +65,7 @@
       <button id="spinBtn" class="ui">⏸ 回転</button>
       <button id="talkBtn" class="ui">💬 説明</button>
       <button id="rulerBtn" class="ui">📏 定規</button>
+      <button id="refBtn" class="ui">🥤 比較</button>
       <button id="soundBtn" class="ui">🔊 音声</button>
       <button id="resetBtn" class="ui">↺</button>
     </span>
@@ -134,7 +135,7 @@
     };
 
     const st = { scale: 1.20, userY: 0.0, tilt: 90 };
-    let active = null, showRuler = false, soundOn = true, lineIdx = 0;
+    let active = null, showRuler = false, showRefs = false, soundOn = true, lineIdx = 0;
 
     // DOM参照
     const dishes = {};
@@ -147,13 +148,50 @@
         ...META[key]
       };
     });
+    Object.values(dishes).forEach(buildRefs);
 
     function seat(d) {
       const baseSeat = d.halfH * st.scale;
       d.model.setAttribute('scale', `${st.scale} ${st.scale} ${st.scale}`);
       d.model.setAttribute('rotation', `${st.tilt} 0 0`);
       d.model.setAttribute('position', `0 0 ${(baseSeat + st.userY).toFixed(3)}`);
-      updateRuler(d);
+      updateRuler(d); updateRefs(d);
+    }
+
+    // 比較アイテム（500mlペットボトル＋クレジットカード）を生成
+    function buildRefs(d) {
+      const card = document.createElement('a-plane');
+      card.setAttribute('material', 'src: ./assets/refcard.png; transparent: true; shader: flat; side: double');
+      card.setAttribute('visible', 'false');
+      d.target.appendChild(card); d.card = card;
+
+      const bottle = document.createElement('a-entity');
+      bottle.setAttribute('visible', 'false'); bottle.setAttribute('rotation', '90 0 0');
+      const body = document.createElement('a-cylinder'); body.setAttribute('material', 'color: #d7ecf7; opacity: 0.85; transparent: true; shader: flat');
+      const label = document.createElement('a-cylinder'); label.setAttribute('material', 'color: #e0703a; shader: flat');
+      const cap = document.createElement('a-cylinder'); cap.setAttribute('material', 'color: #2a7fbf; shader: flat');
+      bottle.appendChild(body); bottle.appendChild(label); bottle.appendChild(cap);
+      d.target.appendChild(bottle); d.bottle = { group: bottle, body, label, cap };
+    }
+    function updateRefs(d) {
+      if (!d.card) return;
+      const u = 1 / (+document.getElementById('cMarker').value || 11);   // cm→ローカル単位
+      const dishHalf = st.scale * NATIVE_W * 0.5;
+      // カード（平置き・左）
+      const cw = 8.56 * u, ch = 5.4 * u;
+      d.card.setAttribute('geometry', `primitive: plane; width: ${cw.toFixed(3)}; height: ${ch.toFixed(3)}`);
+      d.card.setAttribute('position', `${(-(dishHalf + cw * 0.5 + 0.1)).toFixed(3)} 0 0.004`);
+      d.card.setAttribute('visible', showRefs);
+      // ペットボトル（立てる・右）
+      const bodyR = 3.3 * u, bodyH = 16 * u, capR = 1.7 * u, capH = 2.4 * u;
+      d.bottle.body.setAttribute('geometry', `primitive: cylinder; radius: ${bodyR.toFixed(3)}; height: ${bodyH.toFixed(3)}`);
+      d.bottle.body.setAttribute('position', `0 ${(bodyH * 0.5).toFixed(3)} 0`);
+      d.bottle.label.setAttribute('geometry', `primitive: cylinder; radius: ${(bodyR * 1.03).toFixed(3)}; height: ${(5 * u).toFixed(3)}`);
+      d.bottle.label.setAttribute('position', `0 ${(bodyH * 0.45).toFixed(3)} 0`);
+      d.bottle.cap.setAttribute('geometry', `primitive: cylinder; radius: ${capR.toFixed(3)}; height: ${capH.toFixed(3)}`);
+      d.bottle.cap.setAttribute('position', `0 ${(bodyH + capH * 0.5).toFixed(3)} 0`);
+      d.bottle.group.setAttribute('position', `${(dishHalf + bodyR + 0.15).toFixed(3)} 0 0`);
+      d.bottle.group.setAttribute('visible', showRefs);
     }
     function updateRuler(d) {
       const mCm = +document.getElementById('cMarker').value || 11;
@@ -251,6 +289,7 @@
     document.getElementById('talkBtn').addEventListener('click', talkNext);
     document.getElementById('soundBtn').addEventListener('click', (e) => { soundOn = !soundOn; e.target.textContent = (soundOn ? '🔊' : '🔇') + ' 音声'; if (!soundOn) stopAudio(); });
     document.getElementById('rulerBtn').addEventListener('click', (e) => { showRuler = !showRuler; e.target.classList.toggle('on', showRuler); Object.values(dishes).forEach(updateRuler); });
+    document.getElementById('refBtn').addEventListener('click', (e) => { showRefs = !showRefs; e.target.classList.toggle('on', showRefs); Object.values(dishes).forEach(updateRefs); });
     document.getElementById('resetBtn').addEventListener('click', () => { yaw = 0; pitch = 0; spinVel = 0; st.userY = 0; st.tilt = 90; document.getElementById('sY').value = 0; document.getElementById('sTilt').value = 90; if (active) { active.yaw.object3D.rotation.set(0, 0, 0); active.pitch.object3D.rotation.set(0, 0, 0); } applyAll(); });
 
     // 吹き出し
