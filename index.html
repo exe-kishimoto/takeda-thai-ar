@@ -81,8 +81,8 @@
     <input type="range" id="sScale" min="0.1" max="3.0" step="0.02" value="0.80">
     <label>高さ（浮き）<span class="val" id="vY">0.00</span></label>
     <input type="range" id="sY" min="-0.3" max="0.8" step="0.01" value="0.00">
-    <label>傾き（X回転）<span class="val" id="vTilt">90</span></label>
-    <input type="range" id="sTilt" min="0" max="180" step="1" value="90">
+    <label>見る角度（上⇔横）<span class="val" id="vTilt">60</span></label>
+    <input type="range" id="sTilt" min="0" max="120" step="1" value="60">
     <div style="margin-top:10px"><code id="dump"></code></div>
   </div>
 
@@ -110,13 +110,13 @@
     <a-entity class="content" data-key="gapao" visible="false">
       <a-plane class="ruler" visible="false" position="0 0 0.004" material="src: ./assets/ruler.png; transparent: true; shader: flat; side: double"></a-plane>
       <a-entity class="yaw"><a-entity class="pitch">
-        <a-gltf-model class="model" src="#gapaoAsset" rotation="90 0 0" position="0 0 0.2" scale="0.8 0.8 0.8"></a-gltf-model>
+        <a-gltf-model class="model" src="#gapaoAsset" rotation="0 0 0" position="0 0 0" scale="0.8 0.8 0.8"></a-gltf-model>
       </a-entity></a-entity>
     </a-entity>
     <a-entity class="content" data-key="kaomangai" visible="false">
       <a-plane class="ruler" visible="false" position="0 0 0.004" material="src: ./assets/ruler.png; transparent: true; shader: flat; side: double"></a-plane>
       <a-entity class="yaw"><a-entity class="pitch">
-        <a-gltf-model class="model" src="#kaomangaiAsset" rotation="90 0 0" position="0 0 0.2" scale="0.8 0.8 0.8"></a-gltf-model>
+        <a-gltf-model class="model" src="#kaomangaiAsset" rotation="0 0 0" position="0 0 0" scale="0.8 0.8 0.8"></a-gltf-model>
       </a-entity></a-entity>
     </a-entity>
   </a-scene>
@@ -137,7 +137,7 @@
         'カオマンガイ ¥1,298（税込）', '鶏の旨みごはん＋しっとり蒸し鶏', '甘辛の特製ダレでどうぞ' ]}
     };
 
-    const st = { scale: 0.80, userY: 0.0, tilt: 90 };
+    const st = { scale: 0.80, userY: 0.0, tilt: 60 };
     const S = { active: null, az: 0, el: 0, azVel: 0, autoSpin: false, dragging: false, smoothTau: 200 };
     let showRuler = false, showRefs = false, soundOn = true, lineIdx = 0;
 
@@ -157,10 +157,10 @@
     Object.values(dishes).forEach(buildRefs);
 
     function seat(d) {
-      const baseSeat = d.halfH * st.scale;
+      // 向き(傾き・回転)はsmootherのuserQで付与するのでモデル自体は素の向き
       d.model.setAttribute('scale', `${st.scale} ${st.scale} ${st.scale}`);
-      d.model.setAttribute('rotation', `${st.tilt} 0 0`);
-      d.model.setAttribute('position', `0 0 ${(baseSeat + st.userY).toFixed(3)}`);
+      d.model.setAttribute('rotation', '0 0 0');
+      d.model.setAttribute('position', `0 0 ${st.userY.toFixed(3)}`);
       updateRuler(d); updateRefs(d);
     }
     function updateRuler(d) {
@@ -195,7 +195,7 @@
 
     // ★平滑追従（位置・マーカー姿勢は平滑化）＋ 画面基準オービット回転（ユーザー操作は即時反映）
     const _p = new THREE.Vector3(), _q = new THREE.Quaternion(), _s = new THREE.Vector3();
-    const AXIS_Z = new THREE.Vector3(0, 0, 1), AXIS_X = new THREE.Vector3(1, 0, 0);
+    const AXIS_Y = new THREE.Vector3(0, 1, 0), AXIS_X = new THREE.Vector3(1, 0, 0);
     const qAz = new THREE.Quaternion(), qEl = new THREE.Quaternion(), userQ = new THREE.Quaternion(), targetQ = new THREE.Quaternion();
     const D2R = THREE.MathUtils.degToRad;
     AFRAME.registerComponent('smoother', {
@@ -205,10 +205,10 @@
         const f = dt / 16.67;
         // ユーザー回転の自動回転／フリック慣性（アクティブ時のみ）
         if (S.active && !S.dragging) { if (S.autoSpin) S.az += 0.3 * f; S.az += S.azVel * f; S.azVel *= Math.pow(0.94, f); if (Math.abs(S.azVel) < 0.01) S.azVel = 0; }
-        // 皿の垂直軸(法線Z)まわり＝ターンテーブル回転／縦=手前に傾ける(X)
-        qAz.setFromAxisAngle(AXIS_Z, D2R(S.az));
-        qEl.setFromAxisAngle(AXIS_X, D2R(S.el));
-        userQ.copy(qAz).multiply(qEl);
+        // 縦軸(Y)まわりのターンテーブル回転＝皿が回って側面が見える。X回転は「上から見る角度」
+        qAz.setFromAxisAngle(AXIS_Y, D2R(S.az));
+        qEl.setFromAxisAngle(AXIS_X, D2R(st.tilt + S.el));
+        userQ.copy(qEl).multiply(qAz);
         let found = null;
         for (const key in dishes) {
           const d = dishes[key];
