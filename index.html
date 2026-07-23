@@ -195,7 +195,7 @@
 
     // ★平滑追従（位置・マーカー姿勢は平滑化）＋ 画面基準オービット回転（ユーザー操作は即時反映）
     const _p = new THREE.Vector3(), _q = new THREE.Quaternion(), _s = new THREE.Vector3();
-    const AXIS_Y = new THREE.Vector3(0, 1, 0), AXIS_X = new THREE.Vector3(1, 0, 0);
+    const AXIS_Z = new THREE.Vector3(0, 0, 1), AXIS_X = new THREE.Vector3(1, 0, 0);
     const qAz = new THREE.Quaternion(), qEl = new THREE.Quaternion(), userQ = new THREE.Quaternion(), targetQ = new THREE.Quaternion();
     const D2R = THREE.MathUtils.degToRad;
     AFRAME.registerComponent('smoother', {
@@ -205,10 +205,10 @@
         const f = dt / 16.67;
         // ユーザー回転の自動回転／フリック慣性（アクティブ時のみ）
         if (S.active && !S.dragging) { if (S.autoSpin) S.az += 0.3 * f; S.az += S.azVel * f; S.azVel *= Math.pow(0.94, f); if (Math.abs(S.azVel) < 0.01) S.azVel = 0; }
-        // 画面(カメラ)基準の回転：横=Y軸まわり／縦=X軸まわり
-        qAz.setFromAxisAngle(AXIS_Y, D2R(S.az));
+        // 皿の垂直軸(法線Z)まわり＝ターンテーブル回転／縦=手前に傾ける(X)
+        qAz.setFromAxisAngle(AXIS_Z, D2R(S.az));
         qEl.setFromAxisAngle(AXIS_X, D2R(S.el));
-        userQ.copy(qEl).multiply(qAz);
+        userQ.copy(qAz).multiply(qEl);
         let found = null;
         for (const key in dishes) {
           const d = dishes[key];
@@ -220,7 +220,7 @@
             if (!d._init) { d.content.object3D.position.copy(_p); d._mq.copy(_q); d.content.object3D.scale.copy(_s); d.content.setAttribute('visible', true); d._init = true; }
             else { d.content.object3D.position.lerp(_p, k); d._mq.slerp(_q, k); d.content.object3D.scale.lerp(_s, k); }
             // マーカー姿勢(平滑) にユーザー回転(即時) を合成
-            targetQ.copy(userQ).multiply(d._mq);
+            targetQ.copy(d._mq).multiply(userQ);
             d.content.object3D.quaternion.copy(targetQ);
           } else if (d._init) {
             d._init = false; d.content.setAttribute('visible', false);
