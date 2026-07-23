@@ -85,11 +85,15 @@
     <input type="range" id="sY" min="-0.3" max="0.8" step="0.01" value="0.00">
     <label>傾き（X回転）<span class="val" id="vTilt">90</span></label>
     <input type="range" id="sTilt" min="0" max="180" step="1" value="90">
+    <hr>
+    <strong>ブレ防止（揺れる時は左へ）</strong>
+    <label>安定 ⇔ 追従 <span class="val" id="vJit">5</span></label>
+    <input type="range" id="sJit" min="1" max="50" step="1" value="5">
     <div style="margin-top:10px">現在値:<br><code id="dump"></code></div>
   </div>
 
   <a-scene
-    mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 1; autoStart: false; uiScanning: no; uiLoading: no; uiError: no; filterMinCF: 0.00005; filterBeta: 5; missTolerance: 10; warmupTolerance: 2;"
+    mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 1; autoStart: false; uiScanning: no; uiLoading: no; uiError: no; filterMinCF: 0.00001; filterBeta: 2; missTolerance: 10; warmupTolerance: 2;"
     color-space="sRGB"
     renderer="colorManagement: true, physicallyCorrectLights: true, antialias: true"
     gltf-model="dracoDecoderPath: https://www.gstatic.com/draco/versioned/decoders/1.5.6/"
@@ -245,6 +249,7 @@
         document.getElementById('bar').style.display = 'flex';
         hintOps.classList.add('show'); setTimeout(() => hintOps.classList.remove('show'), 6000);
         applyAll(); startSpinLoop();
+        arCtrl = sceneEl.systems['mindar-image-system'].controller; applyJitter();
         if (Object.values(dishes).every(d => d.model.getObject3D('mesh'))) loader.style.display = 'none';
       } catch (e) { loader.style.display = 'none'; alert('カメラを開始できませんでした: ' + e.message); }
     });
@@ -335,6 +340,18 @@
     document.getElementById('sScale').oninput = e => { st.scale = +e.target.value; applyAll(); };
     document.getElementById('sY').oninput     = e => { st.userY = +e.target.value; applyAll(); };
     document.getElementById('sTilt').oninput  = e => { st.tilt  = +e.target.value; applyAll(); };
+    // ブレ防止（実行中にMindARのフィルタ強度を変更）
+    let arCtrl = null;
+    function applyJitter() {
+      const v = +document.getElementById('sJit').value;
+      document.getElementById('vJit').textContent = v;
+      const minCF = v * 0.000002, beta = Math.max(1, v * 0.5);
+      if (arCtrl) {
+        arCtrl.filterMinCF = minCF; arCtrl.filterBeta = beta;
+        (arCtrl.trackingStates || []).forEach(s => { if (s.filter) { s.filter.minCutOff = minCF; s.filter.beta = beta; } });
+      }
+    }
+    document.getElementById('sJit').oninput = applyJitter;
     document.getElementById('calcBtn').addEventListener('click', () => {
       const markerCm = +document.getElementById('cMarker').value, dishCm = +document.getElementById('cDish').value;
       if (markerCm > 0 && dishCm > 0) { st.scale = dishCm / (NATIVE_W * markerCm); document.getElementById('sScale').value = st.scale; applyAll(); }
