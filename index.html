@@ -16,19 +16,29 @@
     #intro p { font-size: 15px; opacity: .92; line-height: 1.8; margin-bottom: 26px; }
     #startBtn { font-size: 17px; padding: 14px 36px; border: 0; border-radius: 999px; background: #e0703a; color: #fff; font-weight: 700; cursor: pointer; box-shadow: 0 6px 20px rgba(224,112,58,.4); }
     #startBtn:active { transform: scale(.97); }
-    #scanHint { position: fixed; left: 0; right: 0; bottom: 116px; z-index: 20; text-align: center; color: #fff; font-size: 15px; pointer-events: none; text-shadow: 0 2px 8px rgba(0,0,0,.8); transition: opacity .4s; }
+
+    #scanHint { position: fixed; left: 0; right: 0; bottom: 128px; z-index: 20; text-align: center; color: #fff; font-size: 15px; pointer-events: none; text-shadow: 0 2px 8px rgba(0,0,0,.8); transition: opacity .4s; }
     #scanHint .box { display: inline-block; background: rgba(0,0,0,.55); padding: 10px 20px; border-radius: 999px; }
     #loader { position: fixed; inset: 0; z-index: 25; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.6); color: #fff; font-size: 15px; }
-    #bubble { position: fixed; left: 50%; top: 56px; transform: translateX(-50%) scale(.9); z-index: 22; max-width: 84%; background: #fff; color: #2a2118; padding: 12px 16px; border-radius: 16px; font-size: 15px; line-height: 1.6; box-shadow: 0 8px 24px rgba(0,0,0,.35); opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; }
+
+    #bubble { position: fixed; left: 50%; top: 54px; transform: translateX(-50%) scale(.9); z-index: 22; max-width: 86%; background: #fff; color: #2a2118; padding: 12px 16px; border-radius: 16px; font-size: 15px; line-height: 1.6; box-shadow: 0 8px 24px rgba(0,0,0,.35); opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; }
     #bubble.show { opacity: 1; transform: translateX(-50%) scale(1); }
     #bubble::after { content: ""; position: absolute; left: 50%; bottom: -10px; transform: translateX(-50%); border: 10px solid transparent; border-top-color: #fff; border-bottom: 0; }
-    #bar { position: fixed; left: 0; right: 0; bottom: 16px; z-index: 20; display: none; justify-content: center; gap: 8px; flex-wrap: wrap; padding: 0 8px; pointer-events: none; }
-    #bar button { pointer-events: auto; border: 0; border-radius: 999px; padding: 9px 14px; background: rgba(0,0,0,.55); color: #fff; font-size: 13px; cursor: pointer; }
+
+    /* 操作ヒント（数秒で自動的に消える。ボタンとは重ならない高さ） */
+    #hintOps { position: fixed; left: 0; right: 0; bottom: 82px; z-index: 19; text-align: center; color: #fff; font-size: 12px; opacity: 0; pointer-events: none; text-shadow: 0 1px 4px rgba(0,0,0,.85); transition: opacity .4s; }
+    #hintOps.show { opacity: .9; }
+
+    /* 操作バー：1行固定・はみ出す場合は横スクロール */
+    #bar { position: fixed; left: 0; right: 0; bottom: 18px; z-index: 20; display: none; justify-content: flex-start; gap: 7px; padding: 0 10px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+    #bar::-webkit-scrollbar { display: none; }
+    #bar .wrap { margin: 0 auto; display: inline-flex; gap: 7px; }
+    #bar button { flex: 0 0 auto; border: 0; border-radius: 999px; padding: 9px 13px; background: rgba(0,0,0,.6); color: #fff; font-size: 13px; cursor: pointer; }
     #bar button.on { background: #e0703a; }
-    #hintOps { position: fixed; left: 0; right: 0; bottom: 66px; z-index: 20; text-align: center; color: #fff; font-size: 12px; opacity: .85; pointer-events: none; text-shadow: 0 1px 4px rgba(0,0,0,.8); }
+
     .ui { touch-action: none; }
     #tuneToggle { position: fixed; right: 12px; top: 12px; z-index: 21; width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(0,0,0,.5); color: #fff; font-size: 20px; cursor: pointer; display: none; }
-    #tune { position: fixed; right: 12px; top: 66px; z-index: 21; display: none; background: rgba(0,0,0,.78); color: #fff; padding: 14px; border-radius: 12px; font-size: 12px; width: 232px; max-height: 82vh; overflow: auto; }
+    #tune { position: fixed; right: 12px; top: 66px; z-index: 21; display: none; background: rgba(0,0,0,.8); color: #fff; padding: 14px; border-radius: 12px; font-size: 12px; width: 230px; max-height: 82vh; overflow: auto; }
     #tune label { display: block; margin: 8px 0 2px; }
     #tune input[type=range] { width: 100%; }
     #tune input[type=number] { width: 64px; }
@@ -48,14 +58,16 @@
   <div id="scanHint" style="display:none"><span class="box">📸 料理の写真にカメラを向けてください</span></div>
   <div id="loader">3Dモデルを読み込み中…</div>
   <div id="bubble"></div>
+  <div id="hintOps">ドラッグ＝回転　ピンチ＝拡大　タップ＝説明</div>
 
-  <div id="hintOps" style="display:none">ドラッグ＝回転　ピンチ＝拡大　タップ＝説明</div>
   <div id="bar">
-    <button id="spinBtn" class="ui">⏸ 自動回転</button>
-    <button id="talkBtn" class="ui">💬 説明</button>
-    <button id="rulerBtn" class="ui">📏 定規</button>
-    <button id="soundBtn" class="ui">🔊 音声</button>
-    <button id="resetBtn" class="ui">↺ リセット</button>
+    <span class="wrap">
+      <button id="spinBtn" class="ui">⏸ 回転</button>
+      <button id="talkBtn" class="ui">💬 説明</button>
+      <button id="rulerBtn" class="ui">📏 定規</button>
+      <button id="soundBtn" class="ui">🔊 音声</button>
+      <button id="resetBtn" class="ui">↺</button>
+    </span>
   </div>
 
   <button id="tuneToggle" class="ui">⚙️</button>
@@ -72,19 +84,16 @@
     <input type="range" id="sY" min="-0.3" max="0.8" step="0.01" value="0.00">
     <label>傾き（X回転）<span class="val" id="vTilt">90</span></label>
     <input type="range" id="sTilt" min="0" max="180" step="1" value="90">
-    <label>追従なめらかさ <span class="val" id="vSmooth">100</span></label>
-    <input type="range" id="sSmooth" min="0" max="250" step="10" value="100">
     <div style="margin-top:10px">現在値:<br><code id="dump"></code></div>
   </div>
 
   <a-scene
-    mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 1; autoStart: false; uiScanning: no; uiLoading: no; uiError: no; filterMinCF: 0.0002; filterBeta: 200; missTolerance: 8; warmupTolerance: 3;"
+    mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 1; autoStart: false; uiScanning: no; uiLoading: no; uiError: no; filterMinCF: 0.00005; filterBeta: 5; missTolerance: 10; warmupTolerance: 2;"
     color-space="sRGB"
     renderer="colorManagement: true, physicallyCorrectLights: true, antialias: true"
     gltf-model="dracoDecoderPath: https://www.gstatic.com/draco/versioned/decoders/1.5.6/"
     vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: false"
-    smoother>
+    device-orientation-permission-ui="enabled: false">
 
     <a-assets>
       <a-asset-item id="gapaoAsset" src="./assets/gapao.glb"></a-asset-item>
@@ -93,26 +102,20 @@
 
     <a-camera position="0 0 0" look-controls="enabled: false" wasd-controls="enabled: false"></a-camera>
 
-    <!-- トラッカー（空。写真の位置を検出するだけ） -->
-    <a-entity class="tracker" data-key="gapao" mindar-image-target="targetIndex: 0"></a-entity>
-    <a-entity class="tracker" data-key="kaomangai" mindar-image-target="targetIndex: 1"></a-entity>
-
-    <!-- 表示コンテンツ（トラッカーへ「なめらかに」追従＝高リフレッシュ機の揺れ対策） -->
-    <a-entity class="content" data-key="gapao" visible="false">
-      <a-plane class="ruler" visible="false" rotation="0 0 0" position="0 0 0.004"
-        material="src: ./assets/ruler.png; transparent: true; shader: flat; side: double"></a-plane>
-      <a-entity class="yaw"><a-entity class="pitch">
-        <a-entity class="reveal" animation__reveal="property: scale; from: 0 0 0; to: 1 1 1; dur: 650; easing: easeOutBack; startEvents: doReveal">
+    <!-- ★モデルはマーカー(アンカー)の子。MindARが直接配置＝確実に表示される -->
+    <a-entity class="dishTarget" data-key="gapao" mindar-image-target="targetIndex: 0">
+      <a-plane class="ruler" visible="false" rotation="0 0 0" position="0 0 0.004" material="src: ./assets/ruler.png; transparent: true; shader: flat; side: double"></a-plane>
+      <a-entity class="yaw" rotation="0 0 0"><a-entity class="pitch" rotation="0 0 0">
+        <a-entity class="reveal" animation__reveal="property: scale; from: 0 0 0; to: 1 1 1; dur: 600; easing: easeOutBack; startEvents: doReveal">
           <a-gltf-model class="model" src="#gapaoAsset" rotation="90 0 0" position="0 0 0.2" scale="1.2 1.2 1.2"></a-gltf-model>
         </a-entity>
       </a-entity></a-entity>
     </a-entity>
 
-    <a-entity class="content" data-key="kaomangai" visible="false">
-      <a-plane class="ruler" visible="false" rotation="0 0 0" position="0 0 0.004"
-        material="src: ./assets/ruler.png; transparent: true; shader: flat; side: double"></a-plane>
-      <a-entity class="yaw"><a-entity class="pitch">
-        <a-entity class="reveal" animation__reveal="property: scale; from: 0 0 0; to: 1 1 1; dur: 650; easing: easeOutBack; startEvents: doReveal">
+    <a-entity class="dishTarget" data-key="kaomangai" mindar-image-target="targetIndex: 1">
+      <a-plane class="ruler" visible="false" rotation="0 0 0" position="0 0 0.004" material="src: ./assets/ruler.png; transparent: true; shader: flat; side: double"></a-plane>
+      <a-entity class="yaw" rotation="0 0 0"><a-entity class="pitch" rotation="0 0 0">
+        <a-entity class="reveal" animation__reveal="property: scale; from: 0 0 0; to: 1 1 1; dur: 600; easing: easeOutBack; startEvents: doReveal">
           <a-gltf-model class="model" src="#kaomangaiAsset" rotation="90 0 0" position="0 0 0.2" scale="1.2 1.2 1.2"></a-gltf-model>
         </a-entity>
       </a-entity></a-entity>
@@ -120,41 +123,36 @@
   </a-scene>
 
   <script>
-    const THREE = AFRAME.THREE;
     const sceneEl = document.querySelector('a-scene');
     const loader  = document.getElementById('loader');
     const scanHint= document.getElementById('scanHint');
     const bubble  = document.getElementById('bubble');
+    const hintOps = document.getElementById('hintOps');
     const NATIVE_W = 1.898;
 
     const META = {
       gapao: { halfH: 0.332, audio: 'assets/audio-gapao.mp3', lines: [
-        'ガイパットガパオライス ¥1,210（税込）', '鶏ひき肉のバジル炒め＋目玉焼き', 'ピリ辛でごはんが進む人気No.1' ]},
+        'ガイパットガパオライス ¥1,210（税込）', '鶏ひき肉のバジル炒め＋目玉焼き', 'ピリ辛でごはんが進む人気メニュー' ]},
       kaomangai: { halfH: 0.210, audio: 'assets/audio-kaomangai.mp3', lines: [
-        'カオマンガイ ¥1,298（税込）', '鶏の旨みごはん＋蒸し鶏', '特製ダレでどうぞ' ]}
+        'カオマンガイ ¥1,298（税込）', '鶏の旨みごはん＋しっとり蒸し鶏', '甘辛の特製ダレでどうぞ' ]}
     };
 
-    // 共有パラメータ
     const st = { scale: 1.20, userY: 0.0, tilt: 90 };
-    // 状態（smootherコンポーネントから参照）
-    const S = { active: null, yaw: 0, pitch: 0, spinVel: 0, autoSpin: true, dragging: false, smoothTau: 100 };
+    let active = null, showRuler = false, soundOn = true, lineIdx = 0;
 
-    // DOM参照収集
+    // DOM参照
     const dishes = {};
-    document.querySelectorAll('.content').forEach(content => {
-      const key = content.dataset.key;
+    document.querySelectorAll('.dishTarget').forEach(t => {
+      const key = t.dataset.key;
       dishes[key] = {
-        key, content,
-        tracker: document.querySelector(`.tracker[data-key="${key}"]`),
-        ruler: content.querySelector('.ruler'),
-        yaw: content.querySelector('.yaw'), pitch: content.querySelector('.pitch'),
-        reveal: content.querySelector('.reveal'), model: content.querySelector('.model'),
+        key, target: t,
+        ruler: t.querySelector('.ruler'), yaw: t.querySelector('.yaw'), pitch: t.querySelector('.pitch'),
+        reveal: t.querySelector('.reveal'), model: t.querySelector('.model'),
         audio: Object.assign(new Audio(META[key].audio), { preload: 'auto' }),
         ...META[key]
       };
     });
 
-    const deg = THREE.MathUtils.degToRad;
     function seat(d) {
       const baseSeat = d.halfH * st.scale;
       d.model.setAttribute('scale', `${st.scale} ${st.scale} ${st.scale}`);
@@ -164,7 +162,7 @@
     }
     function updateRuler(d) {
       const mCm = +document.getElementById('cMarker').value || 11;
-      const w = 30 / mCm, h = 2.4 / mCm;               // 30cm × 2.4cm を写真幅基準で
+      const w = 30 / mCm, h = 2.4 / mCm;
       const yOff = -(st.scale * NATIVE_W * 0.5 + h * 0.5 + 0.12);
       d.ruler.setAttribute('geometry', `primitive: plane; width: ${w.toFixed(3)}; height: ${h.toFixed(3)}`);
       d.ruler.setAttribute('position', `0 ${yOff.toFixed(3)} 0.004`);
@@ -174,113 +172,100 @@
       document.getElementById('vScale').textContent = st.scale.toFixed(2);
       document.getElementById('vY').textContent = st.userY.toFixed(2);
       document.getElementById('vTilt').textContent = st.tilt;
-      document.getElementById('vSmooth').textContent = S.smoothTau;
-      document.getElementById('dump').textContent = `scale ${st.scale.toFixed(2)} / tilt ${st.tilt} / smooth ${S.smoothTau}ms`;
+      document.getElementById('dump').textContent = `scale ${st.scale.toFixed(2)} / tilt ${st.tilt}`;
     }
     function applyAll() { Object.values(dishes).forEach(seat); refreshPanel(); }
 
-    // ===== 追従（フレームレート非依存の補間）＝ 120Hz機の揺れ対策 =====
-    const _m = new THREE.Matrix4(), _p = new THREE.Vector3(), _q = new THREE.Quaternion(), _s = new THREE.Vector3();
-    AFRAME.registerComponent('smoother', {
-      tick: function (time, dt) {
-        const d = S.active; if (!d) return;
-        dt = Math.min(dt || 16.7, 50);
-        // 自動回転＋フリック慣性（フレーム数で正規化）
-        const f = dt / 16.67;
-        if (!S.dragging) { if (S.autoSpin) S.yaw += 0.35 * f; S.yaw += S.spinVel * f; S.spinVel *= Math.pow(0.94, f); if (Math.abs(S.spinVel) < 0.01) S.spinVel = 0; }
-        d.yaw.object3D.rotation.z = deg(S.yaw);
-        d.pitch.object3D.rotation.x = deg(S.pitch);
-        // トラッカーの現在姿勢へ滑らかに寄せる
-        d.tracker.object3D.updateWorldMatrix(true, false);
-        d.tracker.object3D.matrixWorld.decompose(_p, _q, _s);
-        const k = S.smoothTau <= 0 ? 1 : (1 - Math.exp(-dt / S.smoothTau));
-        d.content.object3D.position.lerp(_p, k);
-        d.content.object3D.quaternion.slerp(_q, k);
-        d.content.object3D.scale.lerp(_s, k);   // ★MindARのpostMatrixスケール(1単位=マーカー実寸)を保持
-      }
-    });
-    function snapToTracker(d) {
-      d.tracker.object3D.updateWorldMatrix(true, false);
-      d.tracker.object3D.matrixWorld.decompose(_p, _q, _s);
-      d.content.object3D.position.copy(_p);
-      d.content.object3D.quaternion.copy(_q);
-      d.content.object3D.scale.copy(_s);         // ★スケールも合わせる
+    // 回転（自動＋フリック慣性）
+    let yaw = 0, pitch = 0, spinVel = 0, autoSpin = true, dragging = false;
+    function startSpinLoop() {
+      let prev = performance.now();
+      (function tick(now) {
+        const f = Math.min((now - prev) / 16.67, 3); prev = now;
+        if (active && !dragging) {
+          if (autoSpin) yaw += 0.35 * f;
+          yaw += spinVel * f; spinVel *= Math.pow(0.94, f); if (Math.abs(spinVel) < 0.01) spinVel = 0;
+          active.yaw.object3D.rotation.z = AFRAME.THREE.MathUtils.degToRad(yaw);
+        }
+        requestAnimationFrame(tick);
+      })(prev);
     }
 
-    // ===== 読み込み =====
-    let loadedCount = 0;
+    // 読み込み
+    let loaded = 0;
     Object.values(dishes).forEach(d => {
-      d.model.addEventListener('model-loaded', () => { if (++loadedCount >= 2) loader.style.display = 'none'; });
+      d.model.addEventListener('model-loaded', () => { if (++loaded >= 2) loader.style.display = 'none'; });
       d.model.addEventListener('model-error', () => { loader.style.display = 'none'; });
     });
 
-    // ===== 開始 =====
+    // 開始
     document.getElementById('startBtn').addEventListener('click', async () => {
       document.getElementById('intro').style.display = 'none';
       document.getElementById('tuneToggle').style.display = 'block';
       loader.style.display = 'flex';
       setTimeout(() => { loader.style.display = 'none'; }, 8000);
-      // 音声のロック解除（ユーザー操作の瞬間に一度再生→停止）
-      Object.values(dishes).forEach(d => { try { d.audio.muted = true; d.audio.play().then(() => { d.audio.pause(); d.audio.currentTime = 0; d.audio.muted = false; }).catch(() => { d.audio.muted = false; }); } catch (e) {} });
+      // 音声ロック解除（ユーザー操作中に一度だけ）
+      Object.values(dishes).forEach(d => { try { d.audio.muted = true; const p = d.audio.play(); if (p) p.then(() => { d.audio.pause(); d.audio.currentTime = 0; d.audio.muted = false; }).catch(() => { d.audio.muted = false; }); } catch (e) {} });
       try {
         if (!sceneEl.hasLoaded) await new Promise(r => sceneEl.addEventListener('loaded', r, { once: true }));
         await sceneEl.systems['mindar-image-system'].start();
         scanHint.style.display = 'block';
         document.getElementById('bar').style.display = 'flex';
-        document.getElementById('hintOps').style.display = 'block';
-        applyAll();
+        hintOps.classList.add('show'); setTimeout(() => hintOps.classList.remove('show'), 6000);
+        applyAll(); startSpinLoop();
         if (Object.values(dishes).every(d => d.model.getObject3D('mesh'))) loader.style.display = 'none';
       } catch (e) { loader.style.display = 'none'; alert('カメラを開始できませんでした: ' + e.message); }
     });
 
-    // ===== 検出 =====
+    // 検出（モデルはアンカーの子なので、表示位置はMindARが担当。ここでは見た目と音声だけ）
     Object.values(dishes).forEach(d => {
-      d.tracker.addEventListener('targetFound', () => {
-        S.active = d; scanHint.style.opacity = '0';
-        S.yaw = 0; S.pitch = 0; S.spinVel = 0;
-        d.content.setAttribute('visible', true);
-        snapToTracker(d); seat(d); d.reveal.emit('doReveal');
+      d.target.addEventListener('targetFound', () => {
+        active = d; scanHint.style.opacity = '0';
+        yaw = 0; pitch = 0; spinVel = 0;
+        d.yaw.object3D.rotation.set(0, 0, 0); d.pitch.object3D.rotation.set(0, 0, 0);
+        seat(d); d.reveal.emit('doReveal');
         lineIdx = 0; showBubble(d.lines[0]); playAudio(d);
       });
-      d.tracker.addEventListener('targetLost', () => {
-        if (S.active === d) { S.active = null; scanHint.style.opacity = '1'; d.content.setAttribute('visible', false); hideBubble(); stopAudio(); }
+      d.target.addEventListener('targetLost', () => {
+        if (active === d) { active = null; scanHint.style.opacity = '1'; hideBubble(); stopAudio(); }
       });
     });
 
-    // ===== 音声（MP3） =====
-    let soundOn = true;
+    // 音声
     function playAudio(d) { if (!soundOn) return; stopAudio(); try { d.audio.currentTime = 0; d.audio.play().catch(() => {}); } catch (e) {} }
     function stopAudio() { Object.values(dishes).forEach(d => { try { d.audio.pause(); } catch (e) {} }); }
 
-    // ===== ボタン =====
-    document.getElementById('spinBtn').addEventListener('click', (e) => { S.autoSpin = !S.autoSpin; e.target.textContent = (S.autoSpin ? '⏸' : '▶') + ' 自動回転'; });
-    document.getElementById('talkBtn').addEventListener('click', () => { if (S.active) { showBubble(S.active.lines[(++lineIdx) % S.active.lines.length]); playAudio(S.active); } });
+    // ボタン
+    document.getElementById('spinBtn').addEventListener('click', (e) => { autoSpin = !autoSpin; e.target.textContent = (autoSpin ? '⏸' : '▶') + ' 回転'; });
+    function talkNext() { if (!active) return; showBubble(active.lines[(++lineIdx) % active.lines.length]); playAudio(active); }
+    document.getElementById('talkBtn').addEventListener('click', talkNext);
     document.getElementById('soundBtn').addEventListener('click', (e) => { soundOn = !soundOn; e.target.textContent = (soundOn ? '🔊' : '🔇') + ' 音声'; if (!soundOn) stopAudio(); });
-    let showRuler = false;
     document.getElementById('rulerBtn').addEventListener('click', (e) => { showRuler = !showRuler; e.target.classList.toggle('on', showRuler); Object.values(dishes).forEach(updateRuler); });
-    document.getElementById('resetBtn').addEventListener('click', () => { S.yaw = 0; S.pitch = 0; S.spinVel = 0; st.userY = 0; st.tilt = 90; document.getElementById('sY').value = 0; document.getElementById('sTilt').value = 90; applyAll(); });
+    document.getElementById('resetBtn').addEventListener('click', () => { yaw = 0; pitch = 0; spinVel = 0; st.userY = 0; st.tilt = 90; document.getElementById('sY').value = 0; document.getElementById('sTilt').value = 90; if (active) { active.yaw.object3D.rotation.set(0, 0, 0); active.pitch.object3D.rotation.set(0, 0, 0); } applyAll(); });
 
-    // ===== 吹き出し =====
-    let lineIdx = 0, bubbleTimer = null;
+    // 吹き出し
+    let bubbleTimer = null;
     function showBubble(t) { bubble.textContent = t; bubble.classList.add('show'); clearTimeout(bubbleTimer); bubbleTimer = setTimeout(hideBubble, 6500); }
     function hideBubble() { bubble.classList.remove('show'); }
 
-    // ===== タッチ操作 =====
+    // タッチ操作
     const pointers = new Map();
     let pinchStartDist = 0, pinchStartScale = 1.2, lastX = 0, lastY = 0, lastMoveDx = 0, downTime = 0, moved = 0;
     const isUI = (t) => t && t.closest && t.closest('.ui');
     window.addEventListener('pointerdown', (e) => {
       if (isUI(e.target)) return;
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if (pointers.size === 1) { S.dragging = true; lastX = e.clientX; lastY = e.clientY; lastMoveDx = 0; downTime = Date.now(); moved = 0; }
+      if (pointers.size === 1) { dragging = true; lastX = e.clientX; lastY = e.clientY; lastMoveDx = 0; downTime = Date.now(); moved = 0; }
       else if (pointers.size === 2) { const p = [...pointers.values()]; pinchStartDist = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y); pinchStartScale = st.scale; }
     });
     window.addEventListener('pointermove', (e) => {
       if (!pointers.has(e.pointerId)) return;
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if (pointers.size === 1 && S.dragging && S.active) {
+      if (pointers.size === 1 && dragging && active) {
         const dx = e.clientX - lastX, dy = e.clientY - lastY; lastX = e.clientX; lastY = e.clientY; lastMoveDx = dx; moved += Math.abs(dx) + Math.abs(dy);
-        S.yaw += dx * 0.4; S.pitch = Math.max(-100, Math.min(100, S.pitch + dy * 0.4));
+        yaw += dx * 0.4; pitch = Math.max(-100, Math.min(100, pitch + dy * 0.4));
+        active.yaw.object3D.rotation.z = AFRAME.THREE.MathUtils.degToRad(yaw);
+        active.pitch.object3D.rotation.x = AFRAME.THREE.MathUtils.degToRad(pitch);
       } else if (pointers.size === 2) {
         const p = [...pointers.values()]; const dist = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
         if (pinchStartDist > 0) { st.scale = Math.min(3.0, Math.max(0.05, pinchStartScale * (dist / pinchStartDist))); document.getElementById('sScale').value = st.scale; applyAll(); }
@@ -289,19 +274,18 @@
     function endPointer(e) {
       if (!pointers.has(e.pointerId)) return; pointers.delete(e.pointerId);
       if (pointers.size < 2) pinchStartDist = 0;
-      if (pointers.size === 0) { S.dragging = false; S.spinVel = lastMoveDx * 0.4; if (moved < 12 && (Date.now() - downTime) < 350 && S.active) { showBubble(S.active.lines[(++lineIdx) % S.active.lines.length]); playAudio(S.active); } }
+      if (pointers.size === 0) { dragging = false; spinVel = lastMoveDx * 0.4; if (moved < 12 && (Date.now() - downTime) < 350 && active) talkNext(); }
       else if (pointers.size === 1) { const p = [...pointers.values()][0]; lastX = p.x; lastY = p.y; }
     }
     window.addEventListener('pointerup', endPointer);
     window.addEventListener('pointercancel', endPointer);
 
-    // ===== 微調整・実寸合わせ =====
+    // 微調整・実寸合わせ
     const tune = document.getElementById('tune');
     document.getElementById('tuneToggle').addEventListener('click', () => { tune.style.display = tune.style.display === 'block' ? 'none' : 'block'; });
     document.getElementById('sScale').oninput = e => { st.scale = +e.target.value; applyAll(); };
     document.getElementById('sY').oninput     = e => { st.userY = +e.target.value; applyAll(); };
     document.getElementById('sTilt').oninput  = e => { st.tilt  = +e.target.value; applyAll(); };
-    document.getElementById('sSmooth').oninput = e => { S.smoothTau = +e.target.value; refreshPanel(); };
     document.getElementById('calcBtn').addEventListener('click', () => {
       const markerCm = +document.getElementById('cMarker').value, dishCm = +document.getElementById('cDish').value;
       if (markerCm > 0 && dishCm > 0) { st.scale = dishCm / (NATIVE_W * markerCm); document.getElementById('sScale').value = st.scale; applyAll(); }
