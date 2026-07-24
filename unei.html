@@ -29,7 +29,7 @@
     }
   }
   .a-enter-vr,.a-enter-ar,.a-fullscreen,.a-orientation-modal,.a-loader-title{display:none!important;}
-  .viewer3d { width:100%; height:360px; border-radius:12px; overflow:hidden; position:relative; touch-action:none; cursor:grab; }
+  .viewer3d { width:100%; height:440px; border-radius:12px; overflow:hidden; position:relative; touch-action:none; cursor:grab; }
   .viewer3d:active { cursor:grabbing; }
   .viewer3d a-scene, .viewer3d canvas { width:100%!important; height:100%!important; background:transparent!important; }
   * { box-sizing:border-box; }
@@ -305,8 +305,8 @@
       const bb = new THREE.Box3().setFromObject(o), c = new THREE.Vector3(), s = new THREE.Vector3();
       bb.getCenter(c); bb.getSize(s);
       model.object3D.position.set(-c.x, -c.y, -c.z);       // 中心を原点へ
-      const dist = Math.max(s.x, s.y, s.z) * 1.7;
-      cam.object3D.position.set(0, 0, dist);                // 収まる距離
+      const dist = Math.max(s.x, s.y, s.z) * 1.15;         // 小さいほど料理が大きく見える
+      cam.object3D.position.set(0, 0, dist);
     });
 
     function apply(){ wrap.object3D.rotation.set(THREE.MathUtils.degToRad(pitch), THREE.MathUtils.degToRad(yaw), 0); }
