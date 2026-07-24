@@ -4,41 +4,45 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-<title>運用ガイド｜タイ料理メニューAR</title>
+<title>運用ガイド｜SD トムヤムクン メニューAR</title>
 <style>
   :root {
-    --ground:#FBFAF7; --panel:#ffffff; --panel-2:#f5f2ec;
-    --ink:#1b2530; --ink-soft:#586472; --ink-faint:#8b96a2;
-    --line:#e7e2d9; --line-strong:#d8d2c6;
-    --accent:#cf5a2b; --accent-soft:#f4e2d6;
-    --navy:#173650; --thai:#8f2d2a;
+    --ground:#EAE3D5; --panel:#FBF8F1; --panel-2:#F1EADB;
+    --ink:#241f18; --ink-soft:#685f50; --ink-faint:#9a9080;
+    --line:#ddd2c0; --line-strong:#ccbfa9;
+    --accent:#b3272b; --accent-soft:#f0dcd6;
+    --navy:#2c3a63; --thai:#b3272b;
     --good:#2f7d5b; --warn:#b4632a;
     --jp:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
     --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
-    --maxw:760px;
+    --maxw:780px;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --ground:#10161d; --panel:#161e27; --panel-2:#1b242e;
-      --ink:#e8eef4; --ink-soft:#a2afbc; --ink-faint:#7a8794;
-      --line:#26313d; --line-strong:#334150;
-      --accent:#ef8552; --accent-soft:#3a2519;
-      --navy:#8fb9de; --thai:#df847c;
+      --ground:#191510; --panel:#221c15; --panel-2:#2a2318;
+      --ink:#efe9dd; --ink-soft:#b3a993; --ink-faint:#8a8072;
+      --line:#3a3124; --line-strong:#4a4030;
+      --accent:#e0736e; --accent-soft:#3a221f;
+      --navy:#9fb0d8; --thai:#e0736e;
       --good:#5cc196; --warn:#e0a15e;
     }
   }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--ground); color:var(--ink); font-family:var(--jp);
     line-height:1.8; -webkit-font-smoothing:antialiased; }
-  .wrap { max-width:var(--maxw); margin:0 auto; padding:56px 22px 96px; }
+  .wrap { max-width:var(--maxw); margin:0 auto; padding:34px 22px 96px; }
 
-  .eyebrow { font-size:12px; letter-spacing:.22em; text-transform:uppercase;
-    color:var(--accent); font-weight:700; margin:0 0 14px; }
-  h1 { font-size:clamp(28px,6vw,40px); line-height:1.25; margin:0 0 16px; font-weight:800;
+  .hero-brand { margin:0 0 30px; border-radius:16px; overflow:hidden; border:1px solid var(--line-strong);
+    box-shadow:0 12px 30px rgba(60,40,20,.10); }
+  .hero-brand img { width:100%; display:block; }
+
+  .eyebrow { font-size:12px; letter-spacing:.2em; text-transform:uppercase;
+    color:var(--accent); font-weight:800; margin:0 0 12px; }
+  h1 { font-size:clamp(26px,5.4vw,38px); line-height:1.28; margin:0 0 16px; font-weight:800;
     letter-spacing:.01em; text-wrap:balance; }
   .lede { font-size:clamp(16px,2.4vw,18px); color:var(--ink-soft); margin:0; max-width:60ch; }
 
-  .thesis { margin:34px 0 8px; padding:20px 22px; background:var(--panel);
+  .thesis { margin:32px 0 8px; padding:20px 22px; background:var(--panel);
     border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:12px; }
   .thesis b { color:var(--accent); }
 
@@ -56,6 +60,13 @@
   .flow .chip { background:var(--panel); border:1px solid var(--line); border-radius:999px;
     padding:7px 14px; font-size:14px; }
   .flow .arw { color:var(--ink-faint); font-weight:600; }
+
+  figure.shot { margin:20px 0 6px; text-align:center; background:var(--panel);
+    border:1px solid var(--line); border-radius:16px; padding:22px 18px 16px; }
+  figure.shot img { max-width:min(100%,440px); height:auto; display:inline-block;
+    filter:drop-shadow(0 16px 20px rgba(40,30,15,.22)); }
+  figure.shot figcaption { font-size:13px; color:var(--ink-faint); margin-top:14px; }
+  figure.shot .big { color:var(--accent); font-weight:800; }
 
   .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
   @media (max-width:560px){ .grid2 { grid-template-columns:1fr; } }
@@ -95,8 +106,6 @@
     border-radius:8px; background:var(--panel-2); border:1px solid var(--line-strong); color:var(--accent);
     font-family:var(--mono); font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center; }
   ol.steps b { color:var(--ink); }
-  code { font-family:var(--mono); font-size:.9em; background:var(--panel-2); border:1px solid var(--line);
-    padding:1px 6px; border-radius:6px; }
 
   .rule { height:1px; background:var(--line); border:0; margin:0; }
   .decide { margin-top:52px; background:var(--panel); border:1px solid var(--line); border-radius:16px;
@@ -111,9 +120,11 @@
 <body>
 <div class="wrap">
 
-  <p class="eyebrow">運用ガイド ・ Operations</p>
-  <h1>タイ料理メニューAR<br>― どう管理するのが一番ラクか</h1>
-  <p class="lede">いま何がどう動いていて、料理の追加や写真の差し替えをどう回すのが、お客さまにも店舗にも負担が少ないか。判断のための整理です。</p>
+  <div class="hero-brand"><img src="./assets/brand.png" alt="SD トムヤムクン メニュー" /></div>
+
+  <p class="eyebrow">SD トムヤムクン メニューAR ・ 運用ガイド</p>
+  <h1>どう管理するのが、<br>お客さまも店舗も一番ラクか</h1>
+  <p class="lede">いま何がどう動いていて、料理の追加や写真の差し替えをどう回すのが負担が少ないか。判断のための整理です。</p>
 
   <div class="thesis">
     <p style="margin:0">結論から。今は<b>料理写真そのもの</b>を認識しています。だから写真を撮り直すと反応しなくなる。将来は<b>QRで識別する方式</b>にすると、写真が変わっても壊れず、店舗は「QRを貼るだけ」で回せます。</p>
@@ -128,6 +139,12 @@
       <span class="chip">料理写真にかざす</span><span class="arw">→</span>
       <span class="chip">実物大の3D＋音声説明</span>
     </div>
+
+    <figure class="shot">
+      <img src="./assets/example-dish.png" alt="ARで表示される料理の3Dモデル（ガイパットガパオライス）" />
+      <figcaption><span class="big">実物大</span>で登場し、指で回して全方向から見られます。音声で料理の説明も流れます。</figcaption>
+    </figure>
+
     <div class="grid2">
       <div class="card user">
         <p class="tag">お客さま</p>
@@ -255,7 +272,7 @@
     <p class="small" style="margin:16px 0 0">今すぐ着手しなくてOK。方向はQR方式で共有済みなので、必要になったタイミングで一式（QR発行〜マーカー化〜料理ルーティング）を用意します。</p>
   </div>
 
-  <footer>タイ料理メニューAR ・ 運用の考え方</footer>
+  <footer>SD トムヤムクン メニューAR ・ 運用の考え方</footer>
 </div>
 </body>
 </html>
