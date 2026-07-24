@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<title>運用ガイド｜タイ料理メニューAR</title>
+<style>
+  :root {
+    --ground:#FBFAF7; --panel:#ffffff; --panel-2:#f5f2ec;
+    --ink:#1b2530; --ink-soft:#586472; --ink-faint:#8b96a2;
+    --line:#e7e2d9; --line-strong:#d8d2c6;
+    --accent:#cf5a2b; --accent-soft:#f4e2d6;
+    --navy:#173650; --thai:#8f2d2a;
+    --good:#2f7d5b; --warn:#b4632a;
+    --jp:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+    --maxw:760px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground:#10161d; --panel:#161e27; --panel-2:#1b242e;
+      --ink:#e8eef4; --ink-soft:#a2afbc; --ink-faint:#7a8794;
+      --line:#26313d; --line-strong:#334150;
+      --accent:#ef8552; --accent-soft:#3a2519;
+      --navy:#8fb9de; --thai:#df847c;
+      --good:#5cc196; --warn:#e0a15e;
+    }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--ground); color:var(--ink); font-family:var(--jp);
+    line-height:1.8; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:var(--maxw); margin:0 auto; padding:56px 22px 96px; }
+
+  .eyebrow { font-size:12px; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--accent); font-weight:700; margin:0 0 14px; }
+  h1 { font-size:clamp(28px,6vw,40px); line-height:1.25; margin:0 0 16px; font-weight:800;
+    letter-spacing:.01em; text-wrap:balance; }
+  .lede { font-size:clamp(16px,2.4vw,18px); color:var(--ink-soft); margin:0; max-width:60ch; }
+
+  .thesis { margin:34px 0 8px; padding:20px 22px; background:var(--panel);
+    border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:12px; }
+  .thesis b { color:var(--accent); }
+
+  section { margin-top:52px; }
+  .kicker { display:flex; align-items:baseline; gap:12px; margin:0 0 6px; }
+  .kicker .n { font-family:var(--mono); font-size:13px; color:var(--accent); font-weight:700;
+    font-variant-numeric:tabular-nums; }
+  h2 { font-size:clamp(20px,3.4vw,25px); margin:0 0 14px; font-weight:800; letter-spacing:.01em;
+    text-wrap:balance; }
+  p { margin:0 0 14px; }
+  p.small { color:var(--ink-soft); font-size:15px; }
+
+  .flow { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:6px 0 18px;
+    font-weight:700; color:var(--ink); }
+  .flow .chip { background:var(--panel); border:1px solid var(--line); border-radius:999px;
+    padding:7px 14px; font-size:14px; }
+  .flow .arw { color:var(--ink-faint); font-weight:600; }
+
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:560px){ .grid2 { grid-template-columns:1fr; } }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px 18px; }
+  .card .tag { font-size:11px; letter-spacing:.16em; text-transform:uppercase; font-weight:700;
+    color:var(--ink-faint); margin:0 0 8px; }
+  .card.user { border-top:3px solid var(--navy); }
+  .card.admin { border-top:3px solid var(--accent); }
+  .card h3 { margin:0 0 8px; font-size:17px; }
+  .card ul { margin:0; padding-left:18px; }
+  .card li { margin:4px 0; font-size:15px; color:var(--ink-soft); }
+
+  .callout { border-radius:14px; padding:16px 18px; border:1px solid var(--line); background:var(--panel); margin:14px 0; }
+  .callout.ok { border-left:4px solid var(--good); }
+  .callout.ng { border-left:4px solid var(--thai); }
+  .callout .lab { font-weight:800; margin-right:6px; }
+  .callout.ok .lab { color:var(--good); }
+  .callout.ng .lab { color:var(--thai); }
+
+  .tablewrap { overflow-x:auto; border:1px solid var(--line); border-radius:14px; margin:12px 0; }
+  table { border-collapse:collapse; width:100%; min-width:520px; background:var(--panel); }
+  th, td { text-align:left; padding:13px 15px; border-bottom:1px solid var(--line); font-size:15px; vertical-align:top; }
+  thead th { font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint);
+    background:var(--panel-2); font-weight:700; }
+  tbody tr:last-child td { border-bottom:0; }
+  td .name { font-weight:800; color:var(--ink); }
+  .rec td { background:var(--accent-soft); }
+  .mk { font-weight:800; }
+  .mk.y { color:var(--good); }
+  .mk.n { color:var(--thai); }
+  .mk.m { color:var(--warn); }
+
+  ol.steps { list-style:none; counter-reset:s; margin:8px 0 0; padding:0; }
+  ol.steps li { counter-increment:s; position:relative; padding:10px 0 10px 44px; border-top:1px solid var(--line); }
+  ol.steps li:first-child { border-top:0; }
+  ol.steps li::before { content:counter(s); position:absolute; left:0; top:9px; width:28px; height:28px;
+    border-radius:8px; background:var(--panel-2); border:1px solid var(--line-strong); color:var(--accent);
+    font-family:var(--mono); font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center; }
+  ol.steps b { color:var(--ink); }
+  code { font-family:var(--mono); font-size:.9em; background:var(--panel-2); border:1px solid var(--line);
+    padding:1px 6px; border-radius:6px; }
+
+  .rule { height:1px; background:var(--line); border:0; margin:0; }
+  .decide { margin-top:52px; background:var(--panel); border:1px solid var(--line); border-radius:16px;
+    padding:24px 22px; }
+  .decide h2 { margin-top:0; }
+  .decide .point { display:flex; gap:12px; align-items:flex-start; margin:10px 0; }
+  .decide .point .dot { flex:0 0 auto; width:9px; height:9px; border-radius:50%; background:var(--accent); margin-top:9px; }
+  footer { margin-top:48px; color:var(--ink-faint); font-size:13px; text-align:center; }
+  a { color:var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">運用ガイド ・ Operations</p>
+  <h1>タイ料理メニューAR<br>― どう管理するのが一番ラクか</h1>
+  <p class="lede">いま何がどう動いていて、料理の追加や写真の差し替えをどう回すのが、お客さまにも店舗にも負担が少ないか。判断のための整理です。</p>
+
+  <div class="thesis">
+    <p style="margin:0">結論から。今は<b>料理写真そのもの</b>を認識しています。だから写真を撮り直すと反応しなくなる。将来は<b>QRで識別する方式</b>にすると、写真が変わっても壊れず、店舗は「QRを貼るだけ」で回せます。</p>
+  </div>
+
+  <section>
+    <div class="kicker"><span class="n">01</span></div>
+    <h2>いまどうなっているか</h2>
+    <p>専用アプリは不要。スマホのブラウザだけで動きます。お客さまの体験はシンプルです。</p>
+    <div class="flow">
+      <span class="chip">QRを読む</span><span class="arw">→</span>
+      <span class="chip">料理写真にかざす</span><span class="arw">→</span>
+      <span class="chip">実物大の3D＋音声説明</span>
+    </div>
+    <div class="grid2">
+      <div class="card user">
+        <p class="tag">お客さま</p>
+        <h3>やることは2つだけ</h3>
+        <ul>
+          <li>QRを読む → ブラウザが開く</li>
+          <li>気になる料理の写真にカメラを向ける</li>
+          <li>実物大の料理が出て、サイズ・見た目が分かる</li>
+        </ul>
+      </div>
+      <div class="card admin">
+        <p class="tag">仕組み</p>
+        <h3>認識の目印＝料理写真</h3>
+        <ul>
+          <li>各料理の写真を「マーカー」として登録済み</li>
+          <li>その写真にかざすと一致した料理を表示</li>
+          <li>＝写真の見た目が変わると一致しなくなる</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="kicker"><span class="n">02</span></div>
+    <h2>困るのはどんな時？</h2>
+    <p class="small">「写真が変わったら反応しない」の“変わったら”を正確に。すべての変更で壊れるわけではありません。</p>
+    <div class="callout ok"><span class="lab">平気</span>メニューのレイアウト変更・印刷サイズの変更・用紙変更。<b>写真画像そのものが同じ</b>なら、そのまま認識します。</div>
+    <div class="callout ng"><span class="lab">要対応</span>料理写真を<b>撮り直した／別の画像に差し替えた</b>とき。その料理は認識しなくなり、<b>新しい写真でマーカーを作り直す</b>必要があります（現状はこちら側での作業）。</div>
+    <p class="small">頻繁に写真を差し替える運用だと、この作り直しが毎回発生します。ここが管理のネックです。</p>
+  </section>
+
+  <section>
+    <div class="kicker"><span class="n">03</span></div>
+    <h2>運用の選択肢</h2>
+    <p>「お客さまのラクさ」はどれもほぼ同じ（かざすだけ）。差が出るのは<b>店舗の管理のしやすさ</b>と<b>写真変更への強さ</b>です。</p>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>方式</th><th>お客さま</th><th>店舗の管理</th><th>写真変更に強い</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="name">A. 今の写真認識</span></td>
+            <td>かざすだけ</td>
+            <td>写真を変える度に作り直し</td>
+            <td><span class="mk n">弱い</span></td>
+          </tr>
+          <tr class="rec">
+            <td><span class="name">B. QR認識</span><br><span class="mk" style="color:var(--accent);font-size:12px">おすすめ</span></td>
+            <td>QRを読んでかざす</td>
+            <td>QRを貼るだけ／追加も登録のみ</td>
+            <td><span class="mk y">強い</span></td>
+          </tr>
+          <tr>
+            <td><span class="name">C. 管理サイト</span></td>
+            <td>かざすだけ</td>
+            <td>ブラウザで登録・自己完結</td>
+            <td><span class="mk m">中〜強</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small">C（管理サイト）は理想ですが開発の手間が大きめ。まずは B（QR認識）が費用対効果で最良です。</p>
+  </section>
+
+  <section>
+    <div class="kicker"><span class="n">04</span></div>
+    <h2>おすすめ ― QR運用</h2>
+    <p>料理ごとにQRを置き、<b>QRで「どの料理か」を確定</b>します。写真認識に頼らないので、料理写真を変えても識別は壊れません。</p>
+    <div class="flow">
+      <span class="chip">料理の横のQRを読む</span><span class="arw">→</span>
+      <span class="chip">その料理が直接表示</span><span class="arw">→</span>
+      <span class="chip">3D＋音声</span>
+    </div>
+    <div class="grid2">
+      <div class="card user">
+        <p class="tag">お客さま</p>
+        <h3>迷わない</h3>
+        <ul>
+          <li>見たい料理のQRを読むだけ</li>
+          <li>「どの写真にかざす？」が不要に</li>
+        </ul>
+      </div>
+      <div class="card admin">
+        <p class="tag">店舗・管理者</p>
+        <h3>貼るだけ／足すだけ</h3>
+        <ul>
+          <li>写真を変えても<b>QRはそのまま</b>＝壊れない</li>
+          <li>料理追加は「QR＋モデル＋説明」を登録するだけ</li>
+          <li>メニュー改訂に強い</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout ok"><span class="lab">コツ</span>AR表示の位置合わせにQR自体を目印として使うため、<b>QRは少し大きめ＋枠付き</b>で印刷すると安定します。</div>
+  </section>
+
+  <section>
+    <div class="kicker"><span class="n">05</span></div>
+    <h2>料理を追加・変更する流れ</h2>
+    <p class="small">「今の方式」と「QR方式にした場合」の手順比較。工程が減るのが分かります。</p>
+
+    <h3 style="font-size:15px;margin:18px 0 4px;color:var(--ink-soft)">今の方式（写真認識）</h3>
+    <ol class="steps">
+      <li><b>新しい料理写真を用意</b>し、写真セルを切り出す</li>
+      <li><b>マーカー(.mind)を再生成</b>（現状はこちらで作業）</li>
+      <li>料理名・価格・説明・モデル・音声を<b>設定に追記</b></li>
+      <li><b>反映（公開）</b>してQRから確認</li>
+    </ol>
+
+    <h3 style="font-size:15px;margin:22px 0 4px;color:var(--ink-soft)">QR方式にした場合</h3>
+    <ol class="steps">
+      <li>料理の<b>モデル・写真・説明・音声を登録</b></li>
+      <li>その料理の<b>QRを発行して貼る</b></li>
+      <li>以降、料理写真を変えても<b>作り直し不要</b></li>
+    </ol>
+  </section>
+
+  <hr class="rule" style="margin-top:48px" />
+
+  <div class="decide">
+    <h2>判断のポイント</h2>
+    <div class="point"><span class="dot"></span><p style="margin:0"><b>写真をよく変えるなら</b> → 迷わず QR方式。作り直しの手間が消えます。</p></div>
+    <div class="point"><span class="dot"></span><p style="margin:0"><b>当面メニューが固定なら</b> → 今の写真認識のままで十分。変更時だけ対応。</p></div>
+    <div class="point"><span class="dot"></span><p style="margin:0"><b>店舗側で自己管理したいなら</b> → 将来的に管理サイト（C）へ。まずQR方式で土台を作るのが近道。</p></div>
+    <p class="small" style="margin:16px 0 0">今すぐ着手しなくてOK。方向はQR方式で共有済みなので、必要になったタイミングで一式（QR発行〜マーカー化〜料理ルーティング）を用意します。</p>
+  </div>
+
+  <footer>タイ料理メニューAR ・ 運用の考え方</footer>
+</div>
+</body>
+</html>
