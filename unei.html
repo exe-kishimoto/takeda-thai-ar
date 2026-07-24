@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <title>運用ガイド｜SD トムヤムクン メニューAR</title>
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <style>
   :root {
     --ground:#EAE3D5; --panel:#FBF8F1; --panel-2:#F1EADB;
@@ -27,6 +28,10 @@
       --good:#5cc196; --warn:#e0a15e;
     }
   }
+  .a-enter-vr,.a-enter-ar,.a-fullscreen,.a-orientation-modal,.a-loader-title{display:none!important;}
+  .viewer3d { width:100%; height:360px; border-radius:12px; overflow:hidden; position:relative; touch-action:none; cursor:grab; }
+  .viewer3d:active { cursor:grabbing; }
+  .viewer3d a-scene, .viewer3d canvas { width:100%!important; height:100%!important; background:transparent!important; }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--ground); color:var(--ink); font-family:var(--jp);
     line-height:1.8; -webkit-font-smoothing:antialiased; }
@@ -141,8 +146,19 @@
     </div>
 
     <figure class="shot">
-      <img src="./assets/example-dish.png" alt="ARで表示される料理の3Dモデル（ガイパットガパオライス）" />
-      <figcaption><span class="big">実物大</span>で登場し、指で回して全方向から見られます。音声で料理の説明も流れます。</figcaption>
+      <div class="viewer3d" id="viewer">
+        <a-scene embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false"
+          renderer="alpha: true; colorManagement: true; antialias: true"
+          gltf-model="dracoDecoderPath: https://www.gstatic.com/draco/versioned/decoders/1.5.6/">
+          <a-entity light="type: ambient; intensity: 1.1"></a-entity>
+          <a-entity light="type: directional; intensity: 0.9" position="1 2 1"></a-entity>
+          <a-entity id="vwrap" rotation="-38 0 0">
+            <a-gltf-model id="vmodel" src="./assets/gapao.glb"></a-gltf-model>
+          </a-entity>
+          <a-entity id="vcam" camera position="0 0 2" look-controls="enabled: false" wasd-controls="enabled: false"></a-entity>
+        </a-scene>
+      </div>
+      <figcaption>👆 <span class="big">ドラッグで回転</span>・ピンチで拡大（実際のARでは実物大で登場し、音声説明も流れます）</figcaption>
     </figure>
 
     <div class="grid2">
@@ -274,5 +290,38 @@
 
   <footer>SD トムヤムクン メニューAR ・ 運用の考え方</footer>
 </div>
+
+<script>
+  (function(){
+    const THREE = AFRAME.THREE;
+    const model = document.getElementById('vmodel');
+    const wrap  = document.getElementById('vwrap');
+    const cam   = document.getElementById('vcam');
+    const box   = document.getElementById('viewer');
+    let yaw = 0, pitch = -38, autoRot = true, dragging = false, lastX = 0, lastY = 0;
+
+    model.addEventListener('model-loaded', () => {
+      const o = model.getObject3D('mesh');
+      const bb = new THREE.Box3().setFromObject(o), c = new THREE.Vector3(), s = new THREE.Vector3();
+      bb.getCenter(c); bb.getSize(s);
+      model.object3D.position.set(-c.x, -c.y, -c.z);       // 中心を原点へ
+      const dist = Math.max(s.x, s.y, s.z) * 1.7;
+      cam.object3D.position.set(0, 0, dist);                // 収まる距離
+    });
+
+    function apply(){ wrap.object3D.rotation.set(THREE.MathUtils.degToRad(pitch), THREE.MathUtils.degToRad(yaw), 0); }
+    (function spin(){ if(autoRot && !dragging){ yaw += 0.3; apply(); } requestAnimationFrame(spin); })();
+
+    const pts = new Map(); let pinchD = 0, pinchCam = 2;
+    box.addEventListener('pointerdown', e => { box.setPointerCapture(e.pointerId); pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if(pts.size===1){ dragging=true; autoRot=false; lastX=e.clientX; lastY=e.clientY; }
+      else if(pts.size===2){ const p=[...pts.values()]; pinchD=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y); pinchCam=cam.object3D.position.z; } });
+    box.addEventListener('pointermove', e => { if(!pts.has(e.pointerId)) return; pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if(pts.size===1 && dragging){ yaw += (e.clientX-lastX)*0.5; pitch = Math.max(-85,Math.min(85, pitch+(e.clientY-lastY)*0.5)); lastX=e.clientX; lastY=e.clientY; apply(); }
+      else if(pts.size===2){ const p=[...pts.values()]; const d=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y); if(pinchD>0){ cam.object3D.position.z = Math.max(0.6, Math.min(6, pinchCam * (pinchD/d))); } } });
+    function up(e){ pts.delete(e.pointerId); if(pts.size<2) pinchD=0; if(pts.size===0) dragging=false; }
+    box.addEventListener('pointerup', up); box.addEventListener('pointercancel', up);
+  })();
+</script>
 </body>
 </html>
